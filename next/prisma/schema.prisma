@@ -10,6 +10,24 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
   url      = env("DATABASE_URL")
+}
+
+model Usuario {
+  id          Int     @id @default(autoincrement())
+  nombre      String
+  correo      String  @unique
+  telefono    String
+  contrasena  String
+  puesto      RolUsuario
+  createdAt   DateTime @default(now())
+}
+
+enum RolUsuario {
+  ADMINISTRADOR
+  PROFESOR
+  ESTUDIANTE
+  PADRE_FAMILIA
+  SECRETARIA
 }
