@@ -1,30 +1,24 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import "@/styles/globals.css";
+import type React from "react"
+import type { Metadata } from "next"
+import { Inter } from "next/font/google"
+import "../app/globals.css"
 
-const geistSans = Geist({
-    variable: "--font-geist-sans",
-    subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-    variable: "--font-geist-mono",
-    subsets: ["latin"],
-});
+const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-    title: "Punta de Flecha",
-    description: "Sitio web de gestion escolar",
-};
+  title: "Sistema de Administración Escolar",
+  description: "Sistema integral para la gestión de secundaria",
+    generator: 'v0.dev'
+}
 
-export default function RootLayout({ children, }: Readonly<{ children: React.ReactNode; }>) {
-    return (    
-        <html lang="es">
-            <body
-                className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-dvh`}
-            >
-                {children}
-            </body>
-        </html>
-    );
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <html lang="es" data-theme="dim" className="dark">
+      <body className={inter.className}>{children}</body>
+    </html>
+  )
 }

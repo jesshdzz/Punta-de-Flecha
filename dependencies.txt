@@ -1,0 +1,15 @@
+npm install @radix-ui/react-slot
+npm install class-variance-authority@latest
+npm install next-themes
+npm install tailwind-merge
+npm install -D tailwindcss-animate
+npm install @radix-ui/react-label
+npm install lucide-react
+npm install @radix-ui/react-progress
+npm install @radix-ui/react-radio-group
+npm install ai @ai-sdk/google
+npm install react-day-picker
+npm install @radix-ui/react-accordion
+npm install @radix-ui/react-alert-dialog
+npm install @radix-ui/react-aspect-ratio
+npm install @radix-ui/react-select 
