@@ -15,31 +15,30 @@ datasource db {
 }
 
 model Usuario {
-  id            Int          @id @default(autoincrement())
+  id            Int         @id @default(autoincrement())
   nombre        String
-  correo        String       @unique
+  correo        String      @unique
   telefono      String
   contrasena    String
   puesto        RolUsuario
-  fechaCreacion DateTime     @default(now())
-  Estudiante    Estudiante[]
+  fechaCreacion DateTime    @default(now())
+  Estudiante    Estudiante?
 }
 
 model Estudiante {
-  id        Int       @id @default(autoincrement())
-  usuarioId Int
+  usuarioId Int       @id
   grupoId   Int?
-  Tramite   Tramite[]
+  tramites  Tramite[]
   grupo     Grupo?    @relation(fields: [grupoId], references: [id])
   usuario   Usuario   @relation(fields: [usuarioId], references: [id])
 }
 
 model Grupo {
-  id          Int           @id @default(autoincrement())
-  nombre      String
-  grado       Int
-  estudiantes Estudiante[]
-  Inscripcion Inscripcion[]
+  id            Int           @id @default(autoincrement())
+  nombre        String
+  grado         Int
+  estudiantes   Estudiante[]
+  inscripciones Inscripcion[]
 }
 
 model Tramite {
@@ -48,22 +47,20 @@ model Tramite {
   tipo         TipoTramite
   estado       EstadoTramite
   fecha        DateTime      @default(now())
-  estudiante   Estudiante    @relation(fields: [estudianteId], references: [id])
-  Inscripcion  Inscripcion[]
-  Pago         Pago[]
+  inscripcion  Inscripcion?
+  Pago         Pago?
+  estudiante   Estudiante    @relation(fields: [estudianteId], references: [usuarioId])
 }
 
 model Inscripcion {
-  id        Int     @id @default(autoincrement())
-  tramiteId Int
+  tramiteId Int     @id
   grupoId   Int
   tramite   Tramite @relation(fields: [tramiteId], references: [id])
   grupo     Grupo   @relation(fields: [grupoId], references: [id])
 }
 
 model Pago {
-  id        Int      @id @default(autoincrement())
-  tramiteId Int
+  tramiteId Int      @id
   concepto  String
   monto     Float
   recibos   Recibo[]
@@ -75,7 +72,7 @@ model Recibo {
   pagoId Int
   monto  Float
   fecha  DateTime @default(now())
-  pago   Pago     @relation(fields: [pagoId], references: [id])
+  pago   Pago     @relation(fields: [pagoId], references: [tramiteId])
 }
 
 enum RolUsuario {
@@ -97,6 +94,4 @@ enum TipoTramite {
   Reinscripcion
   Baja
   Pago
-  Solicitud_documento
-  Otro
 }

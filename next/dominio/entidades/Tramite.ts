@@ -1,7 +1,7 @@
-export type TipoTramite = 'Inscripcion' | 'Reinscripcion' | 'Baja' | 'Pago' | 'Solicitud_documento' |'Otro';
+export type TipoTramite = 'Inscripcion' | 'Reinscripcion' | 'Baja' | 'Pago';
 export type EstadoTramite = 'Rechazado' | 'Pendiente' | 'Aceptado';
 
-export class Tramite {
+export abstract class Tramite {
     constructor(
         private id: number | null,
         private estudianteId: number,
