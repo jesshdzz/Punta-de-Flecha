@@ -7,7 +7,7 @@ export class Estudiante extends Usuario {
     // private calificaciones: Calificaciones[] = [];  Aun no se define Calificaciones
 
     constructor(
-        id: number,
+        id: number | null,
         nombre: string,
         correo: string,
         telefono: string,
@@ -45,6 +45,13 @@ export class Estudiante extends Usuario {
 
     public obtenerHorario(): number | null {
         return this.horarioId;
+    }
+
+    public getId(): number | null {
+        return this.id;
+    }
+    public getGrupoId(): number {
+        return this.grupoId ?? 0;
     }
 
     public obtenerInfo(): infoEstudiante {
