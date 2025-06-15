@@ -1,4 +1,4 @@
-import { Usuario } from "./Usuario";
+import { Usuario, infoUsuario } from "./Usuario";
 
 export class PadreFamilia extends Usuario {
     private hijosId: number[] = [];
@@ -12,7 +12,7 @@ export class PadreFamilia extends Usuario {
         contrasena: string,
         domicilio: string
     ) {
-        super(id, nombre, correo, telefono, contrasena, 'PADRE_FAMILIA');
+        super(id, nombre, correo, telefono, contrasena, 'Padre_familia');
         this.domicilio = domicilio;
     }
 
@@ -34,11 +34,17 @@ export class PadreFamilia extends Usuario {
         return this.hijosId;
     }
 
-    public obtenerInfo(): object {
+    public obtenerInfo(): infoPadreFamilia {
         const info = super.obtenerInfo();
         return {
             ...info,
             hijosId: this.hijosId,
+            domicilio: this.domicilio
         };
     }
 }
+
+type infoPadreFamilia = infoUsuario & {
+    hijosId: number[];
+    domicilio: string;
+};
