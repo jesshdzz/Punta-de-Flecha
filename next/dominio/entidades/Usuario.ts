@@ -1,13 +1,14 @@
-export type RolUsuario = 'ADMINISTRADOR' | 'PROFESOR' | 'ESTUDIANTE' | 'PADRE_FAMILIA' | 'SECRETARIA'
+export type RolUsuario = 'Administrador' | 'Profesor' | 'Estudiante' | 'Padre_familia' | 'Secretaria'
 
 export class Usuario {
     constructor(
-        protected id: number | null, // El ID puede ser null si es un nuevo usuario
-        protected nombre: string,
-        protected correo: string,
-        protected telefono: string,
-        protected contrasena: string,
-        protected puesto: RolUsuario
+        private id: number | null, // El ID puede ser null si es un nuevo usuario
+        private nombre: string,
+        private correo: string,
+        private telefono: string,
+        private contrasena: string,
+        private puesto: RolUsuario,
+        private readonly fechaCreacion: Date = new Date() // Fecha de creación del usuario
     ) {
         console.log(`Usuario creado: ${this.nombre}, ID: ${this.id}`) // Solo para prueba
     }
@@ -39,14 +40,12 @@ export class Usuario {
         return this.correo === correo && this.contrasena === contrasena
     }
 
-    public obtenerRol(): RolUsuario { // prueba
+    public getRol(): RolUsuario { // prueba
         return this.puesto
     }
-
     public getId(): number | null {
         return this.id;
     }
-
     public getCorreo(): string {
         return this.correo
     }
@@ -59,12 +58,18 @@ export class Usuario {
     public getContrasena(): string {
         return this.contrasena
     }
+    public getPuesto(): RolUsuario {
+        return this.puesto
+    }
+    public getFechaCreacion(): Date {
+        return this.fechaCreacion;
+    }
 
     public setId(id: number): void {
         this.id = id;
     }
 
-    public obtenerInfo(): infoUsuario {  // prueba
+    public obtenerInfo(): infoUsuario {
         return {
             id: this.id,
             nombre: this.nombre,

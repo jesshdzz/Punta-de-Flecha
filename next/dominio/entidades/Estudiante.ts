@@ -14,7 +14,7 @@ export class Estudiante extends Usuario {
         contrasena: string,
         grupoId?: number,
     ) {
-        super(id, nombre, correo, telefono, contrasena, 'ESTUDIANTE');
+        super(id, nombre, correo, telefono, contrasena, 'Estudiante');
         if (grupoId) {
             this.grupoId = grupoId;
         }
@@ -29,29 +29,23 @@ export class Estudiante extends Usuario {
     }
 
     // SETTERS Y GETTERS
-    public asignarGrupo(grupoId: number): void {
-        this.grupoId = grupoId;
-        console.log(`Grupo asignado: ${this.grupoId}`); // Solo para prueba
-    }
-
-    public obtenerGrupo(): number | null {
-        return this.grupoId;
-    }
-
-    public asignarHorario(horarioId: number): void {
-        this.horarioId = horarioId;
-        console.log(`Horario asignado: ${this.horarioId}`); // Solo para prueba
-    }
-
-    public obtenerHorario(): number | null {
+    
+    public getHorario(): number | null {
         return this.horarioId;
     }
 
-    public getId(): number | null {
-        return this.id;
-    }
     public getGrupoId(): number {
         return this.grupoId ?? 0;
+    }
+    
+    public setGrupo(grupoId: number): void {
+        this.grupoId = grupoId;
+        console.log(`Grupo asignado: ${this.grupoId}`); // Solo para prueba
+    }
+    
+    public setHorario(horarioId: number): void {
+        this.horarioId = horarioId;
+        console.log(`Horario asignado: ${this.horarioId}`); // Solo para prueba
     }
 
     public obtenerInfo(): infoEstudiante {

@@ -9,7 +9,7 @@ export class PersonalSecretaria extends Usuario {
         telefono: string,
         contrasena: string,
     ) {
-        super(id, nombre, correo, telefono, contrasena, 'SECRETARIA')
+        super(id, nombre, correo, telefono, contrasena, 'Secretaria')
     }
 
     public static registrarAlumno(datos: {

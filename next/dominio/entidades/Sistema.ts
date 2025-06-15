@@ -39,7 +39,7 @@ export class Sistema {
     }) {
         // 1. Crear estudiante (sin ID aún)
         const estudiante = new Estudiante(null, datos.nombre, datos.correo, datos.telefono, datos.contrasena)
-        estudiante.asignarGrupo(datos.grupoId)
+        estudiante.setGrupo(datos.grupoId)
 
         // 2. Guardar estudiante en la BD y obtener ID
         await this.bd.guardarEstudiante(estudiante)
@@ -58,11 +58,11 @@ export class Sistema {
         this.bd.actualizarTramite(inscripcion)
 
         // 5. Crear pago
-        const pago = new Pago(null, estudianteId!, datos.montoInscripcion)
+        const pago = new Pago(null, estudianteId!, "pago por inscripcion", datos.montoInscripcion)
         await this.bd.guardarPago(pago)
 
         // 5. Crear recibo
-        const recibo = new Recibo(null, pago.getId()!, pago.getFecha())
+        const recibo = new Recibo(null, pago.getId()!, datos.montoInscripcion, pago.getFecha())
         await this.bd.guardarRecibo(recibo)
 
         pago.aprobar();

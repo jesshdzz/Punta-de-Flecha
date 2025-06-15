@@ -1,25 +1,21 @@
-export type TipoTramite = 'inscripción' | 'reinscripcion' | 'baja' | 'pago' | 'otro';
-export type EstadoTramite = 'rechazado' | 'pendiente' | 'aprobado';
+export type TipoTramite = 'Inscripcion' | 'Reinscripcion' | 'Baja' | 'Pago' | 'Solicitud_documento' |'Otro';
+export type EstadoTramite = 'Rechazado' | 'Pendiente' | 'Aceptado';
 
 export class Tramite {
     constructor(
         private id: number | null,
         private estudianteId: number,
         private tipo: TipoTramite,
-        private estado: EstadoTramite,
+        private estado: EstadoTramite = 'Pendiente',
         private fecha: Date,
     ) { }
 
     public aprobar() {
-        this.estado = 'aprobado';
+        this.estado = "Aceptado";
     }
 
     public rechazar() {
-        this.estado = 'rechazado';
-    }
-
-    public pendiente() {
-        this.estado = 'pendiente';
+        this.estado = "Rechazado";
     }
 
     public getId(): number | null {

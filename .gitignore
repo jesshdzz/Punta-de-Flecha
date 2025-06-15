@@ -39,4 +39,4 @@ yarn-error.log*
 next-env.d.ts
 generated/
 /docker/mysql-data/
-/next/prisma/migrations/
+next/prisma/migrations/

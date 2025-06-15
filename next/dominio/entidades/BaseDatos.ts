@@ -3,8 +3,7 @@ import { Inscripcion } from "./Inscripcion";
 import { Pago } from "./Pago";
 import { Recibo } from "./Recibo";
 import { Tramite } from "./Tramite";
-import { PrismaClient } from "@prisma/client"
-const prisma = new PrismaClient();
+import prisma from "@/lib/prisma"
 
 export class BaseDatos {
     private static instancia: BaseDatos
@@ -22,19 +21,19 @@ export class BaseDatos {
         const existente = await prisma.usuario.findUnique({ where: { correo: estudiante.getCorreo() } })
         if (existente) throw new Error('El correo ya está registrado.')
 
-        const usuario = await prisma.Usuario.create({
+        const usuario = await prisma.usuario.create({
             data: {
                 nombre: estudiante.getNombre(),
                 correo: estudiante.getCorreo(),
                 telefono: estudiante.getTelefono(),
                 contrasena: estudiante.getContrasena(),
-                rol: 'ESTUDIANTE'
+                puesto: 'Estudiante'
             }
         })
 
-        const Estudiante = await prisma.Estudiante.create({
+        const Estudiante = await prisma.estudiante.create({
             data: {
-                id: usuario.id,
+                usuarioId: usuario.id,
                 grupoId: estudiante.getGrupoId() ?? null
             }
         })
@@ -44,17 +43,17 @@ export class BaseDatos {
     }
 
     public async guardarInscripcion(inscripcion: Inscripcion): Promise<boolean> {
-        const tramite = await prisma.Tramite.create({
+        const tramite = await prisma.tramite.create({
             data: {
-                tipo: 'inscripción',
-                estado: 'pendiente',
+                estudianteId: inscripcion.getEstudianteId(),
+                tipo: inscripcion.getTipo(),
+                estado: inscripcion.getEstado(),
             }
         })
 
-        await prisma.Inscripcion.create({
+        await prisma.inscripcion.create({
             data: {
-                id: tramite.id,
-                estudianteId: inscripcion.getEstudianteId(),
+                tramiteId: tramite.id,
                 grupoId: inscripcion.getGrupoId(),
             }
         })
@@ -64,7 +63,7 @@ export class BaseDatos {
     }
 
     public async actualizarTramite(tramite: Tramite): Promise<void> {
-        await prisma.Tramite.update({
+        await prisma.tramite.update({
             where: { id: tramite.getId()! },
             data: {
                 estado: tramite.getEstado(),
@@ -74,22 +73,20 @@ export class BaseDatos {
     }
 
     public async guardarPago(pago: Pago): Promise<boolean> {
-        const tramite = await prisma.Tramite.create({
+        const tramite = await prisma.tramite.create({
             data: {
                 estudianteId: pago.getEstudianteId(),
-                tipo: 'pago',
+                tipo: pago.getTipo(),
                 estado: pago.getEstado(),
                 fecha: pago.getFecha(),
             }
         })
 
-        await prisma.Pago.create({
+        await prisma.pago.create({
             data: {
-                id: tramite.id,
-                estudianteId: pago.getEstudianteId(),
+                tramiteId: tramite.id,
+                concepto: pago.getConcepto(),
                 monto: pago.getMonto(),
-                fecha: pago.getFecha(),
-                estado: pago.getEstado(),
             }
         })
 
@@ -98,10 +95,10 @@ export class BaseDatos {
     }
 
     public async guardarRecibo(recibo: Recibo): Promise<boolean> {
-        await prisma.Recibo.create({
+        await prisma.recibo.create({
             data: {
-                id: recibo.getId()!,
                 pagoId: recibo.getPagoId(),
+                monto: recibo.getMonto(),
                 fecha: recibo.getFecha(),
             }
         })
