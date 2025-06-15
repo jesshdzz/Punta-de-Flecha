@@ -75,7 +75,6 @@ export class Usuario {
     }
 }
 
-
 export type infoUsuario = {
     id: number | null; // El ID puede ser null si es un nuevo usuario
     nombre: string;
