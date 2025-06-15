@@ -30,8 +30,15 @@ export async function POST(req: NextRequest) {
 
         return NextResponse.json({ ok: true, mensaje: 'Alumno registrado correctamente' })
     } catch (error) {
+        if (error instanceof Error) {
+            return NextResponse.json(
+                { ok: false, mensaje: error.message || 'Error al registrar alumno' },
+                { status: 500 }
+            )
+        }
+
         return NextResponse.json(
-            { ok: false, mensaje: error.message || 'Error al registrar alumno' },
+            { ok: false, mensaje: 'Error desconocido al registrar alumno' },
             { status: 500 }
         )
     }
