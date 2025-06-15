@@ -15,13 +15,64 @@ datasource db {
 }
 
 model Usuario {
-  id          Int     @id @default(autoincrement())
+  id         Int        @id @default(autoincrement())
+  nombre     String
+  correo     String     @unique
+  telefono   String
+  contrasena String
+  puesto     RolUsuario
+  createdAt  DateTime   @default(now())
+}
+
+model Estudiante {
+  id            Int           @id
+  usuarioId     Int
+  grupoId       Int?
+  grupo         Grupo?        @relation(fields: [grupoId], references: [id])
+  inscripciones Inscripcion[]
+  Pago          Pago[]
+  Tramite       Tramite[]
+}
+
+model Grupo {
+  id          Int          @id @default(autoincrement())
   nombre      String
-  correo      String  @unique
-  telefono    String
-  contrasena  String
-  puesto      RolUsuario
-  createdAt   DateTime @default(now())
+  estudiantes Estudiante[]
+}
+
+model Tramite {
+  id           Int        @id @default(autoincrement())
+  estudianteId Int
+  tipo         String
+  estado       String
+  fecha        DateTime   @default(now())
+  estudiante   Estudiante @relation(fields: [estudianteId], references: [id])
+}
+
+model Inscripcion {
+  id           Int        @id @default(autoincrement())
+  estudianteId Int
+  grupoId      Int
+  fecha        DateTime   @default(now())
+  estudiante   Estudiante @relation(fields: [estudianteId], references: [id])
+}
+
+model Pago {
+  id           Int        @id @default(autoincrement())
+  estudianteId Int
+  concepto     String
+  monto        Float
+  fecha        DateTime   @default(now())
+  estado       String
+  estudiante   Estudiante @relation(fields: [estudianteId], references: [id])
+  recibos      Recibo[]
+}
+
+model Recibo {
+  id     Int      @id @default(autoincrement())
+  pagoId Int
+  fecha  DateTime @default(now())
+  pago   Pago     @relation(fields: [pagoId], references: [id])
 }
 
 enum RolUsuario {
