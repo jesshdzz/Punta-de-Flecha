@@ -9,7 +9,7 @@ export class Profesor extends Usuario{
         telefono: string,
         contrasena:string,
     ){
-        super(id, nombre, correo, telefono, contrasena, 'PROFESOR')
+        super(id, nombre, correo, telefono, contrasena, 'Profesor')
     }
     public asignarCalificacion(estudianteID:  number, valor: number): boolean {
         if(valor >= 0 && valor <= 10){

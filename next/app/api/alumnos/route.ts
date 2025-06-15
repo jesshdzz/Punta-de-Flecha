@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
         } = datos
 
         // Ejecutar flujo completo
-        PersonalSecretaria.registrarAlumno({
+        await PersonalSecretaria.registrarAlumno({
             nombre,
             correo,
             telefono,
@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
         if (error instanceof Error) {
             return NextResponse.json(
                 { ok: false, mensaje: error.message || 'Error al registrar alumno' },
-                { status: 500 }
+                { status: 400 }
             )
         }
 

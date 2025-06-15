@@ -9,10 +9,10 @@ export class PersonalSecretaria extends Usuario {
         telefono: string,
         contrasena: string,
     ) {
-        super(id, nombre, correo, telefono, contrasena, 'SECRETARIA')
+        super(id, nombre, correo, telefono, contrasena, 'Secretaria')
     }
 
-    public static registrarAlumno(datos: {
+    public static async registrarAlumno(datos: {
         nombre: string
         correo: string
         telefono: string
@@ -26,6 +26,11 @@ export class PersonalSecretaria extends Usuario {
         //     telefono: string
         //     domicilio: string
     }) {
-        Sistema.getInstancia().registrarEstudianteCompleto(datos)
+        try {
+            await Sistema.getInstancia().registrarEstudianteCompleto(datos)
+        } catch (error) {
+            console.error('Error al registrar alumno:', error);
+            throw error; // Re-lanzar el error para que pueda ser manejado por el llamador
+        }
     }
 }
