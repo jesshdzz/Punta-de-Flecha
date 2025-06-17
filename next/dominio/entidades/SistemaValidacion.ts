@@ -129,4 +129,25 @@ export class SistemaValidacion {
         console.log("Material educativo validado correctamente."); // Solo para prueba
     
     }
+    public validarExtensionesArchivos(archivos: { nombreArchivo: string }[]): void {
+    const tiposPermitidos = ['pdf', 'docx', 'pptx', 'mp4'];
+
+    for (const archivo of archivos) {
+        const nombre = archivo.nombreArchivo;
+        const extension = nombre.includes('.') 
+            ? nombre.substring(nombre.lastIndexOf('.') + 1).toLowerCase()
+            : '';
+
+        if (!extension) {
+            throw new Error(`El archivo '${nombre}' no tiene extensión.`);
+        }
+
+        if (!tiposPermitidos.includes(extension)) {
+            throw new Error(`La extensión '${extension}' del archivo '${nombre}' no está permitida.`);
+        }
+    }
+
+    console.log("Todas las extensiones de archivos son válidas.");
+}
+
 }

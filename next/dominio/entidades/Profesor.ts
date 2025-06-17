@@ -45,7 +45,7 @@ export class Profesor extends Usuario implements MaterialProfesor {
 
       if (!datos.archivos || datos.archivos.length === 0) throw new Error("Debe subir al menos un archivo.");
 
-    // Extraer extensión automáticamente
+   
     const nombreArchivo = datos.archivos[0].name;
     const extension = nombreArchivo.substring(nombreArchivo.lastIndexOf('.') + 1).toLowerCase();
 
@@ -60,8 +60,13 @@ export class Profesor extends Usuario implements MaterialProfesor {
         extension
       );
       
+      const archivosParaSistema = datos.archivos.map(file => ({
+  nombreArchivo: file.name
+}));
 
-      const idMaterialCreado = await Sistema.getInstancia().agregarMaterial(material);
+const idMaterialCreado = await Sistema.getInstancia().agregarMaterial(material, archivosParaSistema);
+
+      //const idMaterialCreado = await Sistema.getInstancia().agregarMaterial(material, datos.archivos);
 
       console.log("Material creado con ID: ",idMaterialCreado);
 

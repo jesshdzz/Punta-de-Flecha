@@ -84,7 +84,7 @@ export class Sistema {
 
    
   
-    public async agregarMaterial(material: MaterialEducativo): Promise<number> {
+    public async agregarMaterial(material: MaterialEducativo, archivos: { nombreArchivo: string }[]): Promise<number> {
         try {
             const profesorId = material.getProfesorId();
             console.log("DEBUG: profesorId:", profesorId);
@@ -92,8 +92,9 @@ export class Sistema {
                 throw new Error("El MaterialEducativo no tiene un ID de profesor asociado.");
             }
 
-            // Validación (opcional)
+            
             this.validador.validarMaterial(material);
+            this.validador.validarExtensionesArchivos(archivos);
 
             const datosParaPrisma = {
                 titulo: material.getTitulo(),

@@ -32,15 +32,10 @@ export class MaterialEducativo implements MaterialProfesor {
         categoria: string
         existencia: boolean
         tipoArchivo: string
-        fecha: string // O Date si prefieres
+       
     }): Promise<void> {
         console.log("MaterialEducativo intenta agregarse a sí mismo (simulado):", datos.titulo);
-        // Aquí iría la lógica para que esta instancia del material se "guarde" o "agregue".
-        // Esto podría implicar llamar al Sistema.getInstancia().agregarMaterial(this),
-        // pero la interfaz NO tiene profesorId en los datos, por lo que tendrías que asegurarte
-        // de que `this.profesorId` se use internamente.
-
-        // Por ahora, solo simula que es asíncrono
+       
         return Promise.resolve();
     }
 
