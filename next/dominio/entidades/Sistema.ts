@@ -5,6 +5,9 @@ import { Inscripcion } from "./Inscripcion";
 import { Pago } from "./Pago";
 import { Recibo } from "./Recibo";
 import { SistemaValidacion } from "./SistemaValidacion";
+import { Profesor } from "./Profesor";
+import { MaterialEducativo } from "./MaterialEducativo";
+
 
 export class Sistema {
     private static instancia: Sistema;
@@ -78,4 +81,87 @@ export class Sistema {
             throw new Error("Error desconocido al registrar estudiante.");
         }
     }
+
+   
+  
+    public async agregarMaterial(material: MaterialEducativo): Promise<number> {
+        try {
+            const profesorId = material.getProfesorId();
+            console.log("DEBUG: profesorId:", profesorId);
+            if (!profesorId) {
+                throw new Error("El MaterialEducativo no tiene un ID de profesor asociado.");
+            }
+
+            // Validación (opcional)
+            this.validador.validarMaterial(material);
+
+            const datosParaPrisma = {
+                titulo: material.getTitulo(),
+                descripcion: material.getDescripcion(),
+                categoria: material.getCategoria(),
+                existencia: material.getExistencia(),
+                tipoArchivo: material.getTipoArchivo(),
+                fecha: material.getFecha(),
+                profesor: {
+                    connect: {
+                        usuarioId: profesorId,
+                    },
+                },
+            };
+
+            const materialGuardado = await this.bd.guardarMaterial(datosParaPrisma);
+
+            if (!materialGuardado || !materialGuardado.id) {
+                throw new Error("Error al guardar el material en la base de datos.");
+            }
+
+            material.setId(materialGuardado.id);
+
+            console.log("Material educativo agregado con ID:", material.getId());
+
+            return materialGuardado.id;
+        } catch (error) {
+            console.error("Error en agregarMaterial():", error);
+            throw error;
+        }
+    }
+
+
+
+    public async  agregarArchivosMaterial(materialId:number, archivos: {
+        nombreArchivo: string, urlNube: string}[]): Promise<void>{
+        try{
+            for(const archivo of archivos){
+                await this.bd.guardarArchivo({
+                    nombreArchivo: archivo.nombreArchivo,
+                    urlNube: archivo.urlNube,
+                    material: {
+                        connect:{
+                            id: materialId
+                        }
+                    }
+                });
+                console.log(`Archivo ${archivo.nombreArchivo} agregado al material ${materialId}`);
+        
+            }
+
+        }catch (error) {
+        console.error("Error al agregar archivos al material:", error);
+        throw error;
+    }
+
+
+    }
+
+    public async actualizarExistenciaMaterial(materialId: number): Promise<void> {
+    try {
+        await this.bd.actualizarExistenciaMaterial(materialId);
+        console.log(`Existencia del material ${materialId} actualizada a true.`);
+    } catch (error) {
+        console.error("Error al actualizar existencia del material:", error);
+        throw error;
+    }
+}
+
+
 }

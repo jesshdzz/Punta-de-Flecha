@@ -1,4 +1,5 @@
 import { Docuemento } from "./Documento";
+import { MaterialEducativo } from "./MaterialEducativo";
 
 export class SistemaValidacion {
     private static instance: SistemaValidacion;
@@ -92,5 +93,40 @@ export class SistemaValidacion {
             throw new Error("El monto del pago debe ser mayor a cero.");
         }
         return true;
+    }
+
+
+
+
+
+    //Validar Material Educativo
+    public validarMaterial(material: MaterialEducativo): void {
+        if (!material.getTitulo() || material.getTitulo().trim().length < 5){
+            throw new Error("El título del material es inválido.");
+        }
+
+        if (!material.getDescripcion() || material.getDescripcion().trim().length < 10){
+            throw new Error("La descripción debe tener al menos 10 caracteres.");
+        }
+
+        if(!material.getCategoria()){
+            throw new Error("Debe especificarse una categoría.");
+        }
+
+        if (!(material.getFecha() instanceof Date)) {
+            throw new Error("La fecha es inválida.");
+        }
+
+        if(typeof material.getExistencia() !== 'boolean'){
+            throw new Error("El campo 'existencia' debe ser booleano.");
+        }
+        const tiposPermitidos = ['pdf', 'docx', 'pptx', 'mp4'];
+
+        if (!tiposPermitidos.includes(material.getTipoArchivo().toLowerCase())) {
+            throw new Error("Tipo de archivo no permitido.");
+        }
+
+        console.log("Material educativo validado correctamente."); // Solo para prueba
+    
     }
 }
