@@ -33,4 +33,26 @@ export class PersonalSecretaria extends Usuario {
             throw error; // Re-lanzar el error para que pueda ser manejado por el llamador
         }
     }
+     // Actualización de datos o reinscripción
+        public static async actualizarAlumno(datos: {
+            estudianteId: number;
+            nombre?: string;
+            correo?: string;
+            telefono?: string;
+            contrasena?: string;
+            grupoId?: number;
+            montoReinscripcion: number
+            //materiasCursadas?: string[];
+            //calificaciones?: Record<string, number>;
+            reinscribir?: boolean;
+
+        }) {
+            console.log('[PersonalSecretaria] actualizarsss recibió:', datos);
+            try {
+                await Sistema.getInstancia().actualizarDatosEstudiante(datos);
+            } catch (error) {
+                console.error('Error al actualizar datos del estudiante:', error);
+                throw error;
+            }
+        }
 }

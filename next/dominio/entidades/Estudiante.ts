@@ -1,9 +1,11 @@
 import { infoUsuario, Usuario } from './Usuario';
+export type EstadoEstudiante = "Activo" | "BajaTemoral" | "BajaDefinitiva"
 
 export class Estudiante extends Usuario {
     private grupoId: number | null = null;
     private horarioId: number | null = null;
     private materiasId: number[] = [];
+    private estado: EstadoEstudiante="Activo";
     // private calificaciones: Calificaciones[] = [];  Aun no se define Calificaciones
 
     constructor(
@@ -37,6 +39,9 @@ export class Estudiante extends Usuario {
     public getGrupoId(): number {
         return this.grupoId ?? 0;
     }
+    public getEstado():EstadoEstudiante{
+        return this.estado
+    }
     
     public setGrupo(grupoId: number): void {
         this.grupoId = grupoId;
@@ -46,6 +51,9 @@ export class Estudiante extends Usuario {
     public setHorario(horarioId: number): void {
         this.horarioId = horarioId;
         console.log(`Horario asignado: ${this.horarioId}`); // Solo para prueba
+    }
+    public setEstado(nuevoEstado:EstadoEstudiante): void{
+        this.estado = nuevoEstado
     }
 
     public obtenerInfo(): infoEstudiante {
