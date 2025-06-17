@@ -3,6 +3,7 @@ import { Sistema } from './Sistema'
 import { MaterialEducativo } from './MaterialEducativo'
 import { Numerals } from 'react-day-picker'
 import { ServicioNube } from './ServicioNube'
+import { SistemaValidacion } from './SistemaValidacion'
 
 export class Profesor extends Usuario implements MaterialProfesor {
   constructor(
@@ -28,7 +29,8 @@ export class Profesor extends Usuario implements MaterialProfesor {
     descripcion: string
     categoria: string
     //existencia: boolean
-    tipoArchivo: string
+    //no es lo mejor 
+    //tipoArchivo: string 
     fecha: string
    // profesorId: number
     archivos: File[]
@@ -41,7 +43,12 @@ export class Profesor extends Usuario implements MaterialProfesor {
       //validar para no tener errores
       if (!idProfesor) throw new Error("ID del profesor no definido");
 
-      //Cramos primero el material con existencia en false
+      if (!datos.archivos || datos.archivos.length === 0) throw new Error("Debe subir al menos un archivo.");
+
+    // Extraer extensión automáticamente
+    const nombreArchivo = datos.archivos[0].name;
+    const extension = nombreArchivo.substring(nombreArchivo.lastIndexOf('.') + 1).toLowerCase();
+
       const material = new MaterialEducativo(
         null,
         datos.titulo,
@@ -50,7 +57,7 @@ export class Profesor extends Usuario implements MaterialProfesor {
         datos.descripcion,
         datos.categoria,
         false,
-        datos.tipoArchivo
+        extension
       );
       
 
@@ -68,7 +75,7 @@ export class Profesor extends Usuario implements MaterialProfesor {
         urlNube: servicioNube.generarUrlSimulada(
           idMaterialCreado,
           datos.titulo,
-          datos.tipoArchivo
+          extension
         ),
       }));
 
