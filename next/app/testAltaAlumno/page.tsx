@@ -10,7 +10,7 @@ export default function AltaAlumnoPage() {
         contrasena: '',
         grupoId: '',
         montoInscripcion: '',
-        documentos: [],
+        documentos: [] as File[],
         tutor: {
             nombre: '',
             correo: '',
@@ -35,7 +35,7 @@ export default function AltaAlumnoPage() {
             })
             return
         }
-        
+
         setFormulario({ ...formulario, [e.target.name]: e.target.value })
     }
 
@@ -98,9 +98,18 @@ export default function AltaAlumnoPage() {
                 <input name="tutor.correo" value={formulario.tutor.correo} onChange={handleChange} placeholder="Correo del tutor" className="input input-bordered w-full" type="email" required />
                 <input name="tutor.telefono" value={formulario.tutor.telefono} onChange={handleChange} placeholder="Teléfono del tutor" className="input input-bordered w-full" required />
                 <input name="tutor.domicilio" value={formulario.tutor.domicilio} onChange={handleChange} placeholder="Domicilio del tutor" className="input input-bordered w-full" required />
-
-                {/* Aquí podrías agregar un componente para subir documentos si es necesario */}
-                {/* <DocumentUploader onChange={(docs) => setFormulario({ ...formulario, documentos: docs })} /> */}
+                <div className="mt-4">
+                    <label className="block mb-2">Documentos (opcional):</label>
+                    <input
+                        type="file"
+                        multiple
+                        onChange={(e) => {
+                            const files = Array.from(e.target.files || [])
+                            setFormulario({ ...formulario, documentos: files })
+                        }}
+                        className="file-input file-input-bordered w-full"
+                    />
+                </div>                
 
                 <button className="btn btn-primary w-full" disabled={cargando}>
                     {cargando ? 'Registrando...' : 'Registrar Alumno'}

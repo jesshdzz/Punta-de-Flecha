@@ -7,11 +7,8 @@ import { BajaEstudiante } from "./BajaEstudiante";
 import { Pago } from "./Pago";
 import { Recibo } from "./Recibo";
 import { SistemaValidacion } from "./SistemaValidacion";
-import { Profesor } from "./Profesor";
 import { MaterialEducativo } from "./MaterialEducativo";
-import { Usuario } from "./Usuario";
-
-
+import { Calificacion } from "./Calificacion";
 
 export class Sistema {
     private static instancia: Sistema;
@@ -177,78 +174,6 @@ export class Sistema {
         await this.bd.guardarBajaEstudiante(baja);
     }
 
-    /*public async agregarMaterial(datos:{
-        titulo: string
-        descripcion: string
-        categoria: string
-        }, archivos: { nombreArchivo: string }[], idProfesor: number){
-        try {
-            
-  
-            console.log("El Id del profesor es: ", idProfesor); 
-  
-            /*const profesorId = material.getProfesorId();
-            console.log("DEBUG: profesorId:", profesorId);
-            if (!profesorId) throw new Error("El MaterialEducativo no tiene un ID de profesor asociado.")*/
-
-
-
-    //el sistema se va a encargar de validar el material educativo
-    /*this.validador.validarMaterial(datos);
-  
-    //asi mismo de la extension de los archivos que llegaron del profesor
-    this.validador.validarExtensionesArchivos(archivos);
-  
-    if(archivos.length === 0){
-        throw new Error("Estas mal, en que? en algo.")
-    }
-    const nombreArchivo = archivos[0].nombreArchivo;
-    const extension = nombreArchivo.substring(nombreArchivo.lastIndexOf('.') + 1).toLowerCase();
-  
-    //Crear Material Educativo
-     const material = new MaterialEducativo(
-        null,
-        datos.titulo,
-        idProfesor,
-        new Date(),
-        datos.descripcion,
-        datos.categoria,
-        false,
-        extension
-    );
-  
-   /* const datosParaPrisma = {
-        titulo: material.getTitulo(),
-        descripcion: material.getDescripcion(),
-        categoria: material.getCategoria(),
-        existencia: material.getExistencia(),
-        tipoArchivo: material.getTipoArchivo(),
-        fecha: material.getFecha(),
-        profesor: {
-            connect: {
-                usuarioId: profesorId,
-            },
-        },
-    };
-  
-    const materialGuardado = await this.bd.guardarMaterial(datosParaPrisma);
-  
-    if (!materialGuardado || !materialGuardado.id) {
-        throw new Error("Error al guardar el material en la base de datos.");
-    }
-  
-    material.setId(materialGuardado.id);
-  
-    console.log("Material educativo agregado con ID:", material.getId());
-  
-    return materialGuardado.id;*/
-    /*  } catch (error) {
-          console.error("Error en agregarMaterial():", error);
-          throw error;
-      }
-  }
-  */
-
     public async agregarMaterial(
         datos: { titulo: string; descripcion: string; categoria: string },
         archivos: File[],
@@ -291,6 +216,46 @@ export class Sistema {
         } catch (error) {
             console.error("Error en agregarMaterial:", error);
             throw error;
+        }
+    }
+
+    public async registrarCalificacion(calificacion: {
+        estudianteId: number,
+        materiaId: number,
+        parcial1: number,
+        asistencia1: number,
+        parcial2: number,
+        asistencia2: number,
+        ordinario: number,
+        final: number,
+        asistenciaFin: number
+    }): Promise<void> {
+        try {
+            // Validar calificación
+            this.validador.validarCalificacion(calificacion);
+
+            // Crear la calificación
+            const nuevaCalificacion = new Calificacion(
+                calificacion.estudianteId,
+                calificacion.materiaId,
+                calificacion.parcial1,
+                calificacion.asistencia1,
+                calificacion.parcial2,
+                calificacion.asistencia2,
+                calificacion.ordinario,
+                calificacion.final,
+                calificacion.asistenciaFin
+            );
+
+            // Guardar la calificación en la base de datos
+            await this.bd.guardarCalificacion(nuevaCalificacion);
+
+        } catch (error) {
+            if (error instanceof Error) {
+                throw error;
+            }
+
+            throw new Error("Error al registrar calificación. Intente mas tarde.");
         }
     }
 }

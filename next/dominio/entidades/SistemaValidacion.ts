@@ -81,7 +81,7 @@ export class SistemaValidacion {
 
             this.validarCorreo(datos.correo);
             this.validarTelefono(datos.telefono);
-            
+
             if (datos.grupoId) this.validarGrupo(datos.grupoId);
             if (datos.contrasena) this.validarContrasena(datos.contrasena);
             if (datos.domicilio) this.validarDomicilio(datos.domicilio);
@@ -101,7 +101,7 @@ export class SistemaValidacion {
         }
         return true;
     }
-  
+
     public validarActualizacionDatos(datos: {
         estudianteId: number;
         nombre?: string;
@@ -109,39 +109,39 @@ export class SistemaValidacion {
         telefono?: string;
         contrasena?: string;
         grupoId?: number;
-       // gradoId?: string;
+        // gradoId?: string;
         reinscribir?: boolean;
         montoReinscripcion?: number;
-      }): boolean {
+    }): boolean {
         // 1. El ID siempre obligatorio
         if (!datos.estudianteId || datos.estudianteId <= 0) {
-          throw new Error("El ID del estudiante es obligatorio y debe ser válido.");
+            throw new Error("El ID del estudiante es obligatorio y debe ser válido.");
         }
-      
+
         // 2. Validaciones puntuales de opcionales
-        if (datos.correo)        this.validarCorreo(datos.correo);
-        if (datos.telefono)      this.validarTelefono(datos.telefono);
-        if (datos.contrasena)    this.validarContrasena(datos.contrasena);
-        if (datos.grupoId)       this.validarGrupo(datos.grupoId);
+        if (datos.correo) this.validarCorreo(datos.correo);
+        if (datos.telefono) this.validarTelefono(datos.telefono);
+        if (datos.contrasena) this.validarContrasena(datos.contrasena);
+        if (datos.grupoId) this.validarGrupo(datos.grupoId);
         //if (datos.gradoId)       this.validarGrado(datos.gradoId);
-      
+
         // 3. Si se está reinscribiendo, monto obligatorio y válido
         if (datos.reinscribir) {
-          if (datos.montoReinscripcion == null) {
-            throw new Error("El monto de reinscripción es obligatorio al reinscribir.");
-          }
-          this.validarPago(datos.montoReinscripcion);
+            if (datos.montoReinscripcion == null) {
+                throw new Error("El monto de reinscripción es obligatorio al reinscribir.");
+            }
+            this.validarPago(datos.montoReinscripcion);
         }
-      
+
         return true;
-      }
+    }
 
     //Validar Material Educativo
     public validarMaterial(datos: {
         titulo: string;
         descripcion: string;
         categoria: string;
-        }): void {
+    }): void {
         const { titulo, descripcion, categoria } = datos;
 
         // Validar que existan
@@ -171,15 +171,67 @@ export class SistemaValidacion {
         }
 
         console.log("Validación de material educativa exitosa.");
-        }
+    }
 
     public validarExtensionesArchivos(archivos: File[]) {
         const extensionesPermitidas = ['pdf', 'docx', 'pptx', 'jpg', 'png', 'mp4']; // ejemplo
         for (const archivo of archivos) {
-        const extension = archivo.name.substring(archivo.name.lastIndexOf('.') + 1).toLowerCase();
-        if (!extensionesPermitidas.includes(extension)) {
-            throw new Error(`Archivo no permitido: ${archivo.name} (extensión .${extension})`);
-      }
+            const extension = archivo.name.substring(archivo.name.lastIndexOf('.') + 1).toLowerCase();
+            if (!extensionesPermitidas.includes(extension)) {
+                throw new Error(`Archivo no permitido: ${archivo.name} (extensión .${extension})`);
+            }
+        }
     }
-  }
+
+    public validarCalificacion(calificacion: {
+        estudianteId: number;
+        materiaId: number;
+        parcial1: number;
+        asistencia1: number; // opcional
+        parcial2: number;
+        asistencia2: number; // opcional
+        ordinario: number;
+        final: number;
+        asistenciaFin: number;
+    }): boolean {
+        const { estudianteId, materiaId, parcial1, asistencia1, parcial2, asistencia2, ordinario, final, asistenciaFin } = calificacion;
+
+        if (estudianteId <= 0) {
+            throw new Error("El ID del estudiante debe ser un número positivo.");
+        }
+
+        if (materiaId <= 0) {
+            throw new Error("El ID de la materia debe ser un número positivo.");
+        }
+
+        if (parcial1 < 0 || parcial1 > 10) {
+            throw new Error("La calificación del primer parcial debe estar entre 0 y 10.");
+        }
+
+        if (parcial2 < 0 || parcial2 > 10) {
+            throw new Error("La calificación del segundo parcial debe estar entre 0 y 10.");
+        }
+
+        if (ordinario < 0 || ordinario > 10) {
+            throw new Error("La calificación del examen ordinario debe estar entre 0 y 10.");
+        }
+
+        if (final < 0 || final > 10) {
+            throw new Error("La calificación del examen final debe estar entre 0 y 10.");
+        }
+
+        if (asistenciaFin < 0 || asistenciaFin > 10) {
+            throw new Error("La asistencia final debe estar entre 0 y 10.");
+        }
+
+        if (asistencia1 < 0 || asistencia1 > 10) {
+            throw new Error("La asistencia del primer parcial debe estar entre 0 y 10.");
+        }
+
+        if (asistencia2 < 0 || asistencia2 > 10) {
+            throw new Error("La asistencia del segundo parcial debe estar entre 0 y 10.");
+        }
+
+        return true
+    }
 }
