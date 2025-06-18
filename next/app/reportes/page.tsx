@@ -57,7 +57,7 @@ export default function ReportesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
       <div className="container mx-auto p-6">
         <div className="mb-6">
           <div className="flex items-center gap-4 mb-4">
@@ -69,19 +69,19 @@ export default function ReportesPage() {
             </Link>
           </div>
 
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Sistema de Reportes</h1>
-          <p className="text-gray-600">Consultar y generar reportes del sistema escolar</p>
+          <h1 className="text-3xl font-bold text-base-content mb-2">Sistema de Reportes</h1>
+          <p className="text-base-content/70">Consultar y generar reportes del sistema escolar</p>
         </div>
 
-        <Card className="bg-white shadow-lg mb-6">
+        <Card className="bg-white bg-white dark:bg-gray-800 shadow-lg hover:shadow-xl transition-shadow mb-6">
           <CardHeader>
             <div className="flex justify-between items-center">
               <div>
-                <CardTitle>Reportes Generados</CardTitle>
+                <CardTitle className="text-gray-900 dark:text-base-content">Reportes Generados</CardTitle>
                 <CardDescription>Total de reportes: {reportes.length}</CardDescription>
               </div>
               <Link href="/reportes/generar">
-                <Button>
+                <Button className="bg-blue-600 text-white hover:bg-blue-700 dark:text-white">
                   <Plus className="h-4 w-4 mr-2" />
                   Generar Reporte
                 </Button>
@@ -131,10 +131,10 @@ export default function ReportesPage() {
             ) : (
               <div className="text-center py-12">
                 <FileText className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">No hay reportes generados</h3>
+                <h3 className="text-lg font-semibold text-base-content mb-2">No hay reportes generados</h3>
                 <p className="text-gray-600 mb-4">Comienza generando tu primer reporte del sistema</p>
                 <Link href="/reportes/generar">
-                  <Button>
+                  <Button className="bg-blue-600 text-white hover:bg-blue-700 dark:text-white">
                     <Plus className="h-4 w-4 mr-2" />
                     Generar Primer Reporte
                   </Button>

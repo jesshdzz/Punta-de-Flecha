@@ -20,6 +20,7 @@
     "@radix-ui/react-select": "^2.2.5",
     "@radix-ui/react-slot": "^1.2.3",
     "ai": "^4.3.16",
+    "autoprefixer": "^10.4.21",
     "class-variance-authority": "^0.7.1",
     "daisyui": "^5.0.43",
     "lucide-react": "^0.514.0",
@@ -40,7 +41,7 @@
     "eslint": "^9",
     "eslint-config-next": "15.3.3",
     "prisma": "^6.9.0",
-    "tailwindcss": "^4",
+    "tailwindcss": "^4.1.10",
     "tailwindcss-animate": "^1.0.7",
     "typescript": "^5"
   }

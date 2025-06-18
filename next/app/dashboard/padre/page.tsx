@@ -7,6 +7,14 @@ import { BaseDatos } from "@/lib/database"
 import { SistemaAutenticacion } from "@/lib/auth"
 import type { Calificacion, Estudiante, Materia } from "@/types"
 import { useRouter } from "next/navigation"
+import {
+  Card, CardHeader, CardTitle, CardContent
+} from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import {
+  Table, TableHeader, TableHead, TableBody, TableRow, TableCell
+} from "@/components/ui/table"
 
 function PadreDashboardContent() {
   const [hijo, setHijo] = useState<Estudiante | null>(null)
@@ -22,30 +30,22 @@ function PadreDashboardContent() {
 
   useEffect(() => {
     const db = BaseDatos.getInstance()
-
-    // Obtener información del hijo (simulado)
     const estudiantes = db.obtenerTodosEstudiantes()
     const hijoEncontrado = estudiantes.find((e) => e.padreId === usuario?.id) || estudiantes[0]
     setHijo(hijoEncontrado)
 
     if (hijoEncontrado) {
-      // Obtener calificaciones del hijo
-      const calificacionesHijo = db.obtenerCalificacionesPorEstudiante(hijoEncontrado.id)
-      setCalificaciones(calificacionesHijo)
-
-      // Calcular promedio
-      if (calificacionesHijo.length > 0) {
-        const suma = calificacionesHijo.reduce((acc, cal) => acc + cal.valor, 0)
-        setPromedioGeneral(suma / calificacionesHijo.length)
+      const califs = db.obtenerCalificacionesPorEstudiante(hijoEncontrado.id)
+      setCalificaciones(califs)
+      if (califs.length > 0) {
+        const suma = califs.reduce((acc, c) => acc + c.valor, 0)
+        setPromedioGeneral(suma / califs.length)
       }
     }
 
-    // Crear mapa de materias
-    const materiasMap = new Map()
-    db.obtenerMaterias().forEach((mat) => {
-      materiasMap.set(mat.id, mat)
-    })
-    setMaterias(materiasMap)
+    const matMap = new Map<string, Materia>()
+    db.obtenerMaterias().forEach((mat) => matMap.set(mat.id, mat))
+    setMaterias(matMap)
   }, [usuario])
 
   const handleLogout = () => {
@@ -53,177 +53,176 @@ function PadreDashboardContent() {
     router.push("/login")
   }
 
-  const getColorCalificacion = (valor: number) => {
-    if (valor >= 9) return "badge-success"
-    if (valor >= 7) return "badge-warning"
-    if (valor >= 6) return "badge-info"
-    return "badge-error"
+  const getColorBadge = (valor: number) => {
+    if (valor >= 9) return "default"
+    if (valor >= 7) return "secondary"
+    if (valor >= 6) return "destructive"
+    return "outline"
   }
 
-  const formatearPeriodo = (periodo: string) => {
-    return periodo.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())
-  }
+  const formatearPeriodo = (periodo: string) =>
+    periodo.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())
 
-  const formatearFecha = (fecha: Date) => {
-    return fecha.toLocaleDateString("es-ES")
-  }
+  const formatearFecha = (fecha: Date) =>
+    fecha.toLocaleDateString("es-ES")
 
   return (
-    <div className="min-h-screen bg-gradient-padre" data-theme="school">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 dark:from-gray-900 dark:to-purple-900/30 p-6">
+      
       <div className="container mx-auto p-6">
         {/* Header */}
-        <div className="navbar bg-base-100 rounded-box shadow-lg mb-6">
-          <div className="flex-1">
-            <div>
-              <h1 className="text-3xl font-bold">Panel de Padre de Familia</h1>
-              <p className="text-base-content/70">Bienvenido, {usuario?.nombre}</p>
-            </div>
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">Panel del Padre de Familia</h1>
+            <p className="text-gray-600 dark:text-gray-300">Bienvenido, {usuario?.nombre}</p>
           </div>
-          <div className="flex-none">
-            <button className="btn btn-outline btn-error" onClick={handleLogout}>
-              <LogOut size={16} />
-              Cerrar Sesión
-            </button>
-          </div>
+          <Button variant="outline" size="sm" onClick={handleLogout}>
+            <LogOut className="h-4 w-4 mr-2" />
+            Cerrar Sesión
+          </Button>
         </div>
+      
 
         {/* Notificaciones */}
-        {notificaciones.filter((n) => !n.leida).length > 0 && (
-          <div className="alert alert-info mb-6 animate-fade-in">
-            <Bell size={20} />
-            <div>
-              <h3 className="font-bold">Notificaciones ({notificaciones.filter((n) => !n.leida).length})</h3>
-              <div className="space-y-2 mt-2">
-                {notificaciones
-                  .filter((n) => !n.leida)
-                  .map((notif) => (
-                    <div key={notif.id} className="card bg-base-100 shadow-sm">
-                      <div className="card-body p-3">
-                        <p className="font-medium">{notif.mensaje}</p>
-                        <p className="text-sm opacity-70">{formatearFecha(notif.fecha)}</p>
-                      </div>
-                    </div>
-                  ))}
-              </div>
-            </div>
-          </div>
+        {notificaciones.some(n => !n.leida) && (
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle>
+                <Bell size={20} className="inline mr-2" />
+                Notificaciones ({notificaciones.filter(n => !n.leida).length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {notificaciones.filter(n => !n.leida).map(n => (
+                <div key={n.id} className="p-4 bg-gray-800 rounded shadow-sm">
+                  <p className="font-medium">{n.mensaje}</p>
+                  <p className="text-sm text-gray-500">{formatearFecha(n.fecha)}</p>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
         )}
 
-        {/* Información del hijo */}
+        {/* Secciones de información */}
         {hijo && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-            <div className="card bg-base-100 shadow-lg">
-              <div className="card-body">
-                <h2 className="card-title">
-                  <User className="text-primary" size={20} />
+            <Card>
+              <CardHeader>
+                <CardTitle>
+                  <User size={20} className="inline mr-2 text-primary" />
                   Información del Estudiante
-                </h2>
-                <div className="space-y-3">
-                  <div>
-                    <span className="font-medium">Nombre:</span>
-                    <p>
-                      {hijo.nombre} {hijo.apellidos}
-                    </p>
-                  </div>
-                  <div>
-                    <span className="font-medium">Grado:</span>
-                    <p>
-                      {hijo.grado} - Grupo {hijo.grupo}
-                    </p>
-                  </div>
-                  <div>
-                    <span className="font-medium">Estado:</span>
-                    <div className={`badge ${hijo.activo ? "badge-success" : "badge-error"}`}>
-                      {hijo.activo ? "Activo" : "Inactivo"}
-                    </div>
-                  </div>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div>
+                  <span className="font-medium">Nombre:</span>
+                  <p>{hijo.nombre} {hijo.apellidos}</p>
                 </div>
-              </div>
-            </div>
+                <div>
+                  <span className="font-medium">Grado:</span>
+                  <p>{hijo.grado} - Grupo {hijo.grupo}</p>
+                </div>
+                <div>
+                  <span className="font-medium">Estado:</span>{" "}
+                  <Badge variant={hijo.activo ? "default" : "destructive"}>
+                    {hijo.activo ? "Activo" : "Inactivo"}
+                  </Badge>
+                </div>
+              </CardContent>
+            </Card>
 
-            <div className="card bg-base-100 shadow-lg">
-              <div className="card-body">
-                <h2 className="card-title">
-                  <TrendingUp className="text-success" size={20} />
+            <Card>
+              <CardHeader>
+                <CardTitle>
+                  <TrendingUp size={20} className="inline mr-2 text-success" />
                   Rendimiento Académico
-                </h2>
-                <div className="text-center">
-                  <div className="text-4xl font-bold text-success mb-2">{promedioGeneral.toFixed(1)}</div>
-                  <p className="text-sm opacity-70">Promedio General</p>
-                  <div className={`badge ${getColorCalificacion(promedioGeneral)} mt-2`}>
-                    {promedioGeneral >= 6 ? "Aprobado" : "Necesita Apoyo"}
-                  </div>
-                </div>
-              </div>
-            </div>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="text-center">
+                <p className="text-4xl font-bold text-success mb-2">
+                  {promedioGeneral.toFixed(1)}
+                </p>
+                <p className="text-sm text-gray-500">Promedio General</p>
+                <Badge variant={getColorBadge(promedioGeneral)} className="mt-2">
+                  {promedioGeneral >= 6 ? "Aprobado" : "Necesita Apoyo"}
+                </Badge>
+              </CardContent>
+            </Card>
 
-            <div className="card bg-base-100 shadow-lg">
-              <div className="card-body">
-                <h2 className="card-title">
-                  <BookOpen className="text-secondary" size={20} />
+            <Card>
+              <CardHeader>
+                <CardTitle>
+                  <BookOpen size={20} className="inline mr-2 text-secondary" />
                   Materias Cursadas
-                </h2>
-                <div className="text-center">
-                  <div className="text-4xl font-bold text-secondary mb-2">{materias.size}</div>
-                  <p className="text-sm opacity-70">Materias Activas</p>
-                  <div className="badge badge-secondary mt-2">Ciclo Escolar 2024</div>
-                </div>
-              </div>
-            </div>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="text-center">
+                <p className="text-4xl font-bold text-secondary mb-2">
+                  {materias.size}
+                </p>
+                <p className="text-sm text-gray-500">Materias Activas</p>
+                <Badge variant="secondary" className="mt-2">
+                  Ciclo Escolar 2024
+                </Badge>
+              </CardContent>
+            </Card>
           </div>
         )}
 
-        {/* Calificaciones del hijo */}
-        <div className="card bg-base-100 shadow-lg">
-          <div className="card-body">
-            <h2 className="card-title">Calificaciones de {hijo?.nombre}</h2>
-            <p className="text-base-content/70">Historial de calificaciones por materia y periodo</p>
+        {/* Tabla de calificaciones */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Calificaciones de {hijo?.nombre}</CardTitle>
+          </CardHeader>
+          <CardContent>
             {calificaciones.length > 0 ? (
-              <div className="overflow-x-auto mt-4">
-                <table className="table table-zebra w-full">
-                  <thead>
-                    <tr>
-                      <th>Materia</th>
-                      <th>Calificación</th>
-                      <th>Periodo</th>
-                      <th>Fecha</th>
-                      <th>Estado</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {calificaciones.map((calificacion) => {
-                      const materia = materias.get(calificacion.materiaId)
-                      return (
-                        <tr key={calificacion.id}>
-                          <td className="font-medium">{materia?.nombre || "Materia no encontrada"}</td>
-                          <td>
-                            <div className={`badge ${getColorCalificacion(calificacion.valor)}`}>
-                              <TrendingUp size={12} className="mr-1" />
-                              {calificacion.valor.toFixed(1)}
-                            </div>
-                          </td>
-                          <td>{formatearPeriodo(calificacion.periodo)}</td>
-                          <td>{formatearFecha(calificacion.fecha)}</td>
-                          <td>
-                            <div className={`badge ${calificacion.valor >= 6 ? "badge-success" : "badge-error"}`}>
-                              {calificacion.valor >= 6 ? "Aprobado" : "Reprobado"}
-                            </div>
-                          </td>
-                        </tr>
-                      )
-                    })}
-                  </tbody>
-                </table>
-              </div>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Materia</TableHead>
+                    <TableHead>Calificación</TableHead>
+                    <TableHead>Periodo</TableHead>
+                    <TableHead>Fecha</TableHead>
+                    <TableHead>Estado</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {calificaciones.map(cal => {
+                    const mat = materias.get(cal.materiaId)
+                    return (
+                      <TableRow key={cal.id}>
+                        <TableCell className="font-medium">{mat?.nombre || "—"}</TableCell>
+                        <TableCell>
+                          <Badge variant={getColorBadge(cal.valor)}>
+                            <TrendingUp size={12} className="mr-1 inline" />
+                            {cal.valor.toFixed(1)}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{formatearPeriodo(cal.periodo)}</TableCell>
+                        <TableCell>{formatearFecha(cal.fecha)}</TableCell>
+                        <TableCell>
+                          <Badge variant={cal.valor >= 6 ? "default" : "destructive"}>
+                            {cal.valor >= 6 ? "Aprobado" : "Reprobado"}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
+                </TableBody>
+              </Table>
             ) : (
               <div className="text-center py-12">
-                <TrendingUp size={48} className="mx-auto opacity-30 mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No hay calificaciones registradas</h3>
-                <p className="opacity-70">Las calificaciones aparecerán aquí cuando los profesores las registren</p>
+                <TrendingUp size={48} className="mx-auto text-gray-300 mb-4" />
+                <h3 className="text-lg font-semibold mb-2">
+                  No hay calificaciones registradas
+                </h3>
+                <p className="text-gray-500">
+                  Las calificaciones aparecerán aquí cuando los profesores las registren
+                </p>
               </div>
             )}
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   )

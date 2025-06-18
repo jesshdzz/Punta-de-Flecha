@@ -62,7 +62,7 @@ export default function UsuariosPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800" data-theme="dim">
       <div className="container mx-auto p-6">
         <div className="mb-6">
           <div className="flex items-center gap-4 mb-4">
@@ -74,11 +74,11 @@ export default function UsuariosPage() {
             </Link>
           </div>
 
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Gestión de Usuarios</h1>
-          <p className="text-gray-600">Administrar profesores, secretarias y administradores del sistema</p>
+          <h1 className="text-3xl font-bold text-base-content mb-2">Gestión de Usuarios</h1>
+          <p className="text-base-content/70">Administrar profesores, secretarias y administradores del sistema</p>
         </div>
 
-        <Card className="bg-white shadow-lg mb-6">
+        <Card className="bg-white dark:bg-gray-800 shadow-lg hover:shadow-xl transition-shadow mb-6">
           <CardHeader>
             <div className="flex justify-between items-center">
               <div>
@@ -86,7 +86,7 @@ export default function UsuariosPage() {
                 <CardDescription>Total de usuarios: {usuariosFiltrados.length}</CardDescription>
               </div>
               <Link href="/usuarios/nuevo">
-                <Button>
+                <Button className="bg-blue-600 text-white hover:bg-blue-700 dark:text-white">
                   <Plus className="h-4 w-4 mr-2" />
                   Alta Usuario
                 </Button>
@@ -157,7 +157,7 @@ export default function UsuariosPage() {
             </div>
 
             {usuariosFiltrados.length === 0 && (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-base-content/60">
                 No se encontraron usuarios que coincidan con la búsqueda
               </div>
             )}

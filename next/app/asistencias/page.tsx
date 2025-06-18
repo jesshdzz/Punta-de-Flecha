@@ -106,19 +106,19 @@ export default function AsistenciasPage() {
             </Link>
           </div>
 
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Control de Asistencias</h1>
-          <p className="text-gray-600 dark:text-gray-300">Consultar y registrar asistencias de estudiantes</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-base-content mb-2">Control de Asistencias</h1>
+          <p className="text-gray-600 dark:text-base-content/70">Consultar y registrar asistencias de estudiantes</p>
         </div>
 
         <Card className="bg-white dark:bg-gray-800 shadow-lg mb-6">
           <CardHeader>
             <div className="flex justify-between items-center">
               <div>
-                <CardTitle className="dark:text-white">Registro de Asistencias</CardTitle>
+                <CardTitle className="dark:text-base-content">Registro de Asistencias</CardTitle>
                 <CardDescription>Total de registros: {asistenciasFiltradas.length}</CardDescription>
               </div>
               <Link href="/asistencias/registrar">
-                <Button>
+                <Button className="bg-blue-600 text-white hover:bg-blue-700 dark:text-white">
                   <Plus className="h-4 w-4 mr-2" />
                   Registrar Asistencia
                 </Button>

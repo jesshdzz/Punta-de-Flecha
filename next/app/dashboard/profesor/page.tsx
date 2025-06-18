@@ -48,8 +48,8 @@ function ProfesorDashboardContent() {
             <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">Panel del Profesor</h1>
             <p className="text-gray-600 dark:text-gray-300">Bienvenido, {usuario?.nombre}</p>
           </div>
-          <Button variant="outline" size="sm" onClick={handleLogout}>
-            <LogOut className="h-4 w-4 mr-2" />
+          <Button variant="outline" onClick={handleLogout}>
+            <LogOut size={16} className="mr-2" />
             Cerrar Sesión
           </Button>
         </div>
@@ -129,7 +129,7 @@ function ProfesorDashboardContent() {
                 </Button>
               </Link>
               <Link href="/calificaciones/subir">
-                <Button className="w-full">
+                <Button className="w-full text-balck dark:text-white bg-blue-600 text-white hover:bg-blue-700">
                   <Plus className="h-4 w-4 mr-2" />
                   Subir Calificación
                 </Button>
@@ -152,7 +152,7 @@ function ProfesorDashboardContent() {
                 </Button>
               </Link>
               <Link href="/asistencias/registrar">
-                <Button className="w-full">
+                <Button className="w-full text-balck dark:text-white bg-blue-600 text-white hover:bg-blue-700">
                   <Plus className="h-4 w-4 mr-2" />
                   Registrar Asistencia
                 </Button>
@@ -175,7 +175,7 @@ function ProfesorDashboardContent() {
                 </Button>
               </Link>
               <Link href="/materiales/nuevo">
-                <Button className="w-full">
+                <Button className="w-full text-balck dark:text-white bg-blue-600 text-white hover:bg-blue-700">
                   <Plus className="h-4 w-4 mr-2" />
                   Subir Material
                 </Button>
