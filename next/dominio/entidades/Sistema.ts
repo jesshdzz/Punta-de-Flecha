@@ -9,10 +9,10 @@ import { Profesor } from "./Profesor";
 import { MaterialEducativo } from "./MaterialEducativo";
 import { Usuario } from "./Usuario";
 import { Numerals } from "react-day-picker";
-import { Grupo } from "./Grupo";
+
 
 export class Sistema {
-     private static instancia: Sistema;
+    private static instancia: Sistema;
     private bd: BaseDatos;
     private validador: SistemaValidacion
 
@@ -20,6 +20,7 @@ export class Sistema {
         this.bd = BaseDatos.getInstancia();
         this.validador = SistemaValidacion.getInstancia();
     }
+
     public static getInstancia(): Sistema {
         if (!Sistema.instancia) {
             Sistema.instancia = new Sistema();
@@ -88,43 +89,56 @@ export class Sistema {
              datos: { titulo: string; descripcion: string; categoria: string },
             archivos: File[],
             idProfesor: number,
-            grupoId: number
+              grupoId: number
         
         ): Promise<void> {
         try {
-            const datosGrupo = await this.bd.obtenerDatosGrupoPorId(grupoId);
-            if (!datosGrupo) {
-            throw new Error("El grupo especificado no existe.");
-            }
-
-            const grupo = new Grupo(datosGrupo.id, datosGrupo.nombre, datosGrupo.grado);
-
            if (!archivos || archivos.length === 0) throw new Error("Debe subir al menos un archivo.");
 
             this.validador.validarMaterial(datos);
             this.validador.validarExtensionesArchivos(archivos);
-
+            const datosGrupo = await this.bd.obtenerDatosGrupoPorId(grupoId);
+            if (!datosGrupo) {
+            throw new Error("El grupo especificado no existe.");
+            }
             // Tomamos la extensión del primer archivo para el ejemplo
             const nombreArchivo = archivos[0].name;
             const extension = nombreArchivo.substring(nombreArchivo.lastIndexOf('.') + 1).toLowerCase();
 
 
-            await grupo.agregarMaterial(
-                {
+            // Crear el material
+            const material = new MaterialEducativo(
+                    null,
+                    datos.titulo,
+                    idProfesor,
+                    new Date(),
+                    datos.descripcion,
+                    datos.categoria,
+                    false,
+                    extension,
+                    grupoId
+            );
+
+            // Aquí el MaterialEducativo se encarga de guardar todo
+            await material.agregarMaterial({
                 titulo: datos.titulo,
                 descripcion: datos.descripcion,
                 categoria: datos.categoria,
                 existencia: false,
                 tipoArchivo: extension,
-                profesorId: idProfesor,
-                },
-                archivos
-            );
+                fecha: new Date().toISOString(),
+                archivos,
+                grupoId
+            });
         } catch (error) {
             console.error("Error en agregarMaterial:", error);
             throw error;
-        }
     }
+}
 
+
+
+    
+   
 
 }

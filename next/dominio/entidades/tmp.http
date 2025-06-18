@@ -5,7 +5,7 @@
 	       "categoria" : "Matemáticas",
 		   "grupoId" : 1,
 	       "archivos": [
-		 { "nombreArchivo": "unidad1_sistemas_operativos" },
+		 { "nombreArchivo": "unidad1_sistemas_operativos.pdf" },
 		 { "nombreArchivo": "practicas_intro.pdf" }
 	       ]
 	       }'
