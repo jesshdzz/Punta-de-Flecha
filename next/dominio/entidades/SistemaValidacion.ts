@@ -94,10 +94,40 @@ export class SistemaValidacion {
         }
         return true;
     }
-
-
-
-
+  
+    public validarActualizacionDatos(datos: {
+        estudianteId: number;
+        nombre?: string;
+        correo?: string;
+        telefono?: string;
+        contrasena?: string;
+        grupoId?: number;
+       // gradoId?: string;
+        reinscribir?: boolean;
+        montoReinscripcion?: number;
+      }): boolean {
+        // 1. El ID siempre obligatorio
+        if (!datos.estudianteId || datos.estudianteId <= 0) {
+          throw new Error("El ID del estudiante es obligatorio y debe ser válido.");
+        }
+      
+        // 2. Validaciones puntuales de opcionales
+        if (datos.correo)        this.validarCorreo(datos.correo);
+        if (datos.telefono)      this.validarTelefono(datos.telefono);
+        if (datos.contrasena)    this.validarContrasena(datos.contrasena);
+        if (datos.grupoId)       this.validarGrupo(datos.grupoId);
+        //if (datos.gradoId)       this.validarGrado(datos.gradoId);
+      
+        // 3. Si se está reinscribiendo, monto obligatorio y válido
+        if (datos.reinscribir) {
+          if (datos.montoReinscripcion == null) {
+            throw new Error("El monto de reinscripción es obligatorio al reinscribir.");
+          }
+          this.validarPago(datos.montoReinscripcion);
+        }
+      
+        return true;
+      }
 
     //Validar Material Educativo
     public validarMaterial(datos: {
@@ -145,5 +175,4 @@ export class SistemaValidacion {
       }
     }
   }
-
 }

@@ -2,6 +2,8 @@ import { BaseDatos } from "./BaseDatos";
 // import { Docuemento } from "./Documento";
 import { Estudiante } from "./Estudiante";
 import { Inscripcion } from "./Inscripcion";
+import { Reinscripcion } from "./Reinscripcion";
+import { BajaEstudiante } from "./BajaEstudiante";
 import { Pago } from "./Pago";
 import { Recibo } from "./Recibo";
 import { SistemaValidacion } from "./SistemaValidacion";
@@ -9,6 +11,7 @@ import { Profesor } from "./Profesor";
 import { MaterialEducativo } from "./MaterialEducativo";
 import { Usuario } from "./Usuario";
 import { Numerals } from "react-day-picker";
+
 
 
 export class Sistema {
@@ -83,8 +86,93 @@ export class Sistema {
             throw new Error("Error desconocido al registrar estudiante.");
         }
     }
-
-   
+  
+    public async actualizarDatosEstudiante(datos: {
+        estudianteId: number;
+        nombre?: string;
+        correo?: string;
+        telefono?: string;
+        contrasena?: string;
+        grupoId?: number;
+        montoReinscripcion: number;
+        reinscribir?: boolean;
+      }): Promise<void> {
+        try {
+          // 1. Validar campos
+          this.validador.validarActualizacionDatos(datos);
+    
+          // 2. Actualizar datos en BD
+          await this.bd.actualizarDatosEstudiante(datos);
+    
+          // 3. Si solicita reinscripción, creamos el flujo completo de reinscripción
+          if (datos.reinscribir && datos.grupoId) {
+            const reinscripcion = new Reinscripcion(
+              null,
+              datos.estudianteId,
+              datos.grupoId
+            );
+            await this.bd.guardarReinscripcion(reinscripcion);
+    
+            reinscripcion.aprobar();
+            await this.bd.actualizarTramite(reinscripcion);
+    
+            // Pago por reinscripción
+            const pago = new Pago(
+              null,
+              datos.estudianteId,
+              "Pago por reinscripción",
+              datos.montoReinscripcion
+            );
+            await this.bd.guardarPago(pago);
+    
+            // Recibo
+            const recibo = new Recibo(
+              null,
+              pago.getId()!,
+              datos.montoReinscripcion,
+              pago.getFecha()
+            );
+            await this.bd.guardarRecibo(recibo);
+    
+            pago.completarPago();
+            await this.bd.actualizarTramite(pago);
+          }
+    
+          console.log(
+            `Estudiante ${datos.estudianteId} actualizado/reinscrito correctamente.`
+          );
+        } catch (error) {
+          if (error instanceof Error) {
+            throw new Error(
+              "Error al actualizar datos del estudiante: " + error.message
+            );
+          }
+          throw new Error("Error desconocido al actualizar datos del estudiante.");
+        }
+      }
+      
+      public async darBajaEstudiante(datos: {
+        estudianteId: number,
+        tipo: "BajaTemporal" | "BajaDefinitiva",
+        motivo: string
+      }): Promise<void> {
+        // 0. (opcional) validar el motivo, el tipo, etc.
+        this.validador.validarCamposRequeridos({ estudianteId: datos.estudianteId, motivo: datos.motivo });
+    
+        // 1. Construir la entidad
+        const baja = new BajaEstudiante(
+          null,
+          datos.estudianteId,
+          datos.tipo,
+          datos.motivo
+        );
+    
+        // 2. (opcional) aprobar de inmediato
+        baja.aprobar();
+    
+        // 3. Persistir trámite y actualizar estado
+        await this.bd.guardarBajaEstudiante(baja);
+      }
   
     /*public async agregarMaterial(datos:{
         titulo: string
@@ -200,12 +288,6 @@ export class Sistema {
         } catch (error) {
             console.error("Error en agregarMaterial:", error);
             throw error;
+        }
     }
-}
-
-
-
-    
-   
-
 }

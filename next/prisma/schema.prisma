@@ -32,6 +32,7 @@ model Estudiante {
   tramites  Tramite[]
   grupo     Grupo?    @relation(fields: [grupoId], references: [id])
   usuario   Usuario   @relation(fields: [usuarioId], references: [id])
+  estado    EstadoEstudiante @default(Activo) 
 }
 
 model Profesor{
@@ -124,6 +125,12 @@ enum EstadoTramite {
 enum TipoTramite {
   Inscripcion
   Reinscripcion
-  Baja
+  BajaTemporal
+  BajaDefinitiva
   Pago
+}
+enum EstadoEstudiante {
+  Activo
+  BajaTemporal
+  BajaDefinitiva
 }
