@@ -1,4 +1,4 @@
-import { Docuemento } from "./Documento";
+import { Documento } from "./Documento";
 import { MaterialEducativo } from "./MaterialEducativo";
 
 export class SistemaValidacion {
@@ -13,10 +13,7 @@ export class SistemaValidacion {
         return SistemaValidacion.instance;
     }
 
-    public validarDocumento(doc: Docuemento): boolean {
-        // Aquí se implementa la lógica de validación del documento
-        // Por simplicidad, asumimos que todos los documentos son válidos
-        console.log(`Documento ${doc.getNombre()} validado correctamente.`);
+    public validarDocumentos(docs: Documento[]): boolean {
         return true;
     }
 
@@ -51,7 +48,13 @@ export class SistemaValidacion {
         if (grupoId <= 0) {
             throw new Error("El ID del grupo debe ser un número positivo.");
         }
-        // Aquí se podría agregar lógica adicional para verificar si el grupo existe en la base de datos
+        return true;
+    }
+
+    public validarDomicilio(domicilio: string): boolean {
+        if (domicilio.length < 10) {
+            throw new Error("El domicilio debe tener al menos 10 caracteres.");
+        }
         return true;
     }
 
@@ -69,15 +72,19 @@ export class SistemaValidacion {
         nombre: string;
         correo: string;
         telefono: string;
-        contrasena: string;
-        grupoId: number;
+        contrasena?: string;
+        domicilio?: string;
+        grupoId?: number;
     }): boolean {
         try {
-            this.validarCamposRequeridos(datos);
-            this.validarGrupo(datos.grupoId);
+            this.validarCamposRequeridos(datos); // validar los campos obligatorios del formulario
+
             this.validarCorreo(datos.correo);
             this.validarTelefono(datos.telefono);
-            this.validarContrasena(datos.contrasena);
+            
+            if (datos.grupoId) this.validarGrupo(datos.grupoId);
+            if (datos.contrasena) this.validarContrasena(datos.contrasena);
+            if (datos.domicilio) this.validarDomicilio(datos.domicilio);
 
             return true;
         } catch (error) {

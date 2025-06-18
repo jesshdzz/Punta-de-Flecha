@@ -9,13 +9,33 @@ export default function AltaAlumnoPage() {
         telefono: '',
         contrasena: '',
         grupoId: '',
-        montoInscripcion: ''
+        montoInscripcion: '',
+        documentos: [],
+        tutor: {
+            nombre: '',
+            correo: '',
+            telefono: '',
+            domicilio: ''
+        }
     })
 
     const [mensaje, setMensaje] = useState('')
     const [cargando, setCargando] = useState(false)
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        // Manejo especial para campos anidados como tutor
+        if (e.target.name.startsWith('tutor.')) {
+            const field = e.target.name.split('.')[1]
+            setFormulario({
+                ...formulario,
+                tutor: {
+                    ...formulario.tutor,
+                    [field]: e.target.value
+                }
+            })
+            return
+        }
+        
         setFormulario({ ...formulario, [e.target.name]: e.target.value })
     }
 
@@ -25,7 +45,7 @@ export default function AltaAlumnoPage() {
         setMensaje('')
 
         try {
-            const res = await fetch('/api/alumnos', {
+            const res = await fetch('/api/alumnos/alta', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -44,7 +64,14 @@ export default function AltaAlumnoPage() {
                     telefono: '',
                     contrasena: '',
                     grupoId: '',
-                    montoInscripcion: ''
+                    montoInscripcion: '',
+                    documentos: [],
+                    tutor: {
+                        nombre: '',
+                        correo: '',
+                        telefono: '',
+                        domicilio: ''
+                    }
                 })
             } else {
                 setMensaje(`❌ ${data.mensaje}`)
@@ -67,6 +94,13 @@ export default function AltaAlumnoPage() {
                 <input name="contrasena" value={formulario.contrasena} onChange={handleChange} placeholder="Contraseña" className="input input-bordered w-full" type="password" required />
                 <input name="grupoId" value={formulario.grupoId} onChange={handleChange} placeholder="ID del grupo" className="input input-bordered w-full" type="number" required />
                 <input name="montoInscripcion" value={formulario.montoInscripcion} onChange={handleChange} placeholder="Monto de inscripción" className="input input-bordered w-full" type="number" step="0.01" required />
+                <input name="tutor.nombre" value={formulario.tutor.nombre} onChange={handleChange} placeholder="Nombre del tutor" className="input input-bordered w-full" required />
+                <input name="tutor.correo" value={formulario.tutor.correo} onChange={handleChange} placeholder="Correo del tutor" className="input input-bordered w-full" type="email" required />
+                <input name="tutor.telefono" value={formulario.tutor.telefono} onChange={handleChange} placeholder="Teléfono del tutor" className="input input-bordered w-full" required />
+                <input name="tutor.domicilio" value={formulario.tutor.domicilio} onChange={handleChange} placeholder="Domicilio del tutor" className="input input-bordered w-full" required />
+
+                {/* Aquí podrías agregar un componente para subir documentos si es necesario */}
+                {/* <DocumentUploader onChange={(docs) => setFormulario({ ...formulario, documentos: docs })} /> */}
 
                 <button className="btn btn-primary w-full" disabled={cargando}>
                     {cargando ? 'Registrando...' : 'Registrar Alumno'}

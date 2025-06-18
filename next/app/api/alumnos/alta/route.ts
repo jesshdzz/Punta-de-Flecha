@@ -11,9 +11,14 @@ export async function POST(req: NextRequest) {
             telefono,
             contrasena,
             grupoId,
-            montoInscripcion
-            // doumentos[]
-            // datos del tutor
+            montoInscripcion,
+            documentos,
+            tutor: {
+                nombre: tutorNombre,
+                correo: tutorCorreo,
+                telefono: tutorTelefono,
+                domicilio: tutorDomicilio
+            }
         } = datos
 
         // Ejecutar flujo completo
@@ -23,9 +28,14 @@ export async function POST(req: NextRequest) {
             telefono,
             contrasena,
             grupoId,
-            montoInscripcion
-            // documentos, 
-            // datos del tutor
+            montoInscripcion,
+            documentos,
+            datosTutor: {
+                nombre: tutorNombre,
+                correo: tutorCorreo,
+                telefono: tutorTelefono,
+                domicilio: tutorDomicilio
+            }
         })
 
         return NextResponse.json({ ok: true, mensaje: 'Alumno registrado correctamente' })

@@ -5,7 +5,7 @@ export interface Usuario {
   nombre: string
   email: string
   password: string
-  tipo: "administrador" | "profesor" | "secretaria" | "padre"
+  tipo: "administrador" | "profesor" | "secretaria" | "padre" | "estudiante"
   fechaCreacion: Date
   activo: boolean
 }

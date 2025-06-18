@@ -1,3 +1,4 @@
+import prisma from "@/lib/prisma"
 import { Estudiante } from "./Estudiante";
 import { Inscripcion } from "./Inscripcion";
 import { Reinscripcion } from "./Reinscripcion";
@@ -5,10 +6,8 @@ import { BajaEstudiante } from "./BajaEstudiante";
 import { Pago } from "./Pago";
 import { Recibo } from "./Recibo";
 import { Tramite } from "./Tramite";
-import prisma from "@/lib/prisma"
 import { MaterialEducativo } from "./MaterialEducativo";
 import { ServicioNube } from "./ServicioNube";
-import { PrismaClient } from '@prisma/client';
 
 
 export class BaseDatos {
@@ -24,10 +23,11 @@ export class BaseDatos {
         return BaseDatos.instancia;
     }
 
-    public async guardarEstudiante(estudiante: Estudiante, grupoId: number): Promise<boolean> {
+    public async guardarEstudiante(estudiante: Estudiante, correoTutor: string, grupoId: number): Promise<boolean> {
         try {
             await this.validarCorreo(estudiante.getCorreo());
             await this.validarGrupo(grupoId);
+            const tutorId = await this.validarTutor(correoTutor);
 
             // Prisma transaction
             await prisma.$transaction(async (tx) => {
@@ -45,6 +45,7 @@ export class BaseDatos {
                     data: {
                         usuarioId: usuario.id,
                         grupoId: grupoId,
+                        padreFamiliaId: tutorId,
                     }
                 })
 
@@ -218,6 +219,14 @@ export class BaseDatos {
             throw new Error("El trámite no existe.");
         }
         return true;
+    }
+
+    public async validarTutor(correo: string): Promise<number> {
+        const tutor = await prisma.usuario.findFirst({ where: { correo: correo, puesto: 'Padre_familia' } })
+        if (!tutor) {
+            throw new Error("El tutor no existe.");
+        }
+        return tutor.id;
     }
 
     public async actualizarDatosEstudiante(datos: {
