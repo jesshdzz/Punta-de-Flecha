@@ -1,7 +1,10 @@
 import type { Config } from "tailwindcss"
 
 const config: Config = {
-  darkMode: ["class"],
+  darkMode: "class", // Habilita el modo oscuro basado en clases
+  // Puedes cambiar a 'media' si prefieres el modo oscuro basado en la preferencia del sistema
+  // darkMode: "media",
+  // Si usas 'media', asegúrate de que tu HTML tenga el atributo `data-theme="dim"` para aplicar el tema oscurO
   content: [
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -74,13 +77,19 @@ const config: Config = {
       },
     },
   },
-  plugins: [require("tailwindcss-animate"), require("daisyui")],
-  daisyui: {
-    themes: ["dim"], // Solo el tema dim de DaisyUI
-    base: false, // No usar los estilos base de DaisyUI para mantener shadcn
-    styled: false, // No usar los estilos de componentes de DaisyUI
-    utils: true, // Mantener las utilidades
-  },
+  plugins: [
+    require("tailwindcss-animate"),
+    require("daisyui"),
+  ],
+}
+
+// DaisyUI config (must be exported separately)
+export const daisyui = {
+  themes: ["dim"], // Solo el tema dim de DaisyUI
+  base: false, // No usar los estilos base de DaisyUI para mantener shadcn
+  styled: false, // No usar los estilos de componentes de DaisyUI
+  utils: true, // Mantener las utilidades
+  darkTheme: "dim", // Establece "dim" como el tema para el modo oscuro
 }
 
 export default config

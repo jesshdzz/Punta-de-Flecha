@@ -115,13 +115,13 @@ export default function RegistrarAsistenciaPage() {
             </Link>
           </div>
 
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Registrar Asistencia</h1>
-          <p className="text-gray-600 dark:text-gray-300">Registrar porcentaje de asistencia de un estudiante</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-base-content mb-2">Registrar Asistencia</h1>
+          <p className="text-gray-600 dark:text-base-content/70">Registrar porcentaje de asistencia de un estudiante</p>
         </div>
 
         <Card className="bg-white dark:bg-gray-800 shadow-lg max-w-2xl mx-auto">
           <CardHeader>
-            <CardTitle className="dark:text-white">Información de Asistencia</CardTitle>
+            <CardTitle className="dark:text-base-content">Información de Asistencia</CardTitle>
             <CardDescription>Complete todos los campos requeridos para registrar la asistencia</CardDescription>
           </CardHeader>
           <CardContent>
@@ -215,7 +215,7 @@ export default function RegistrarAsistenciaPage() {
                     Cancelar
                   </Button>
                 </Link>
-                <Button type="submit" disabled={guardando} className="flex-1">
+                <Button type="submit" disabled={guardando} className="bg-blue-600 text-white hover:bg-blue-700 dark:text-white flex-1">
                   {guardando ? (
                     "Guardando..."
                   ) : (

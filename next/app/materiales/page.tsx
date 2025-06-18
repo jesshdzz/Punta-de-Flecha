@@ -8,8 +8,20 @@ import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Search, Plus, Download, Eye, ArrowLeft, BookOpen, FileText, Video, Presentation } from "lucide-react"
 import { BaseDatos } from "@/lib/database"
+import { FileStorage } from "@/lib/file-storage"
 import type { MaterialEducativo } from "@/types"
 import Link from "next/link"
+
+// Convierte base64 a Blob URL
+function base64ToBlobUrl(data: string): string {
+  const [, base64] = data.includes(',') ? data.split(',') : ['', data]
+  const mime = data.split(',')[0].split(':')[1].split(';')[0] || ''
+  const byteChars = atob(base64)
+  const byteNumbers = new Uint8Array(byteChars.length)
+  for (let i = 0; i < byteChars.length; i++) byteNumbers[i] = byteChars.charCodeAt(i)
+  const blob = new Blob([byteNumbers], { type: mime }) // :contentReference[oaicite:1]{index=1}
+  return URL.createObjectURL(blob)
+}
 
 export default function MaterialesPage() {
   const [materiales, setMateriales] = useState<MaterialEducativo[]>([])
@@ -39,7 +51,7 @@ export default function MaterialesPage() {
       {
         id: "mat_3",
         titulo: "Presentación: Historia de México",
-        descripción: "Revolución Mexicana - Contexto histórico",
+        descripcion: "Revolución Mexicana - Contexto histórico",
         tipo: "presentacion",
         materiaId: "mat2",
         fechaSubida: new Date("2024-01-25"),
@@ -94,8 +106,64 @@ export default function MaterialesPage() {
     return fecha.toLocaleDateString("es-ES")
   }
 
+  const handlePrevisualizar = (materialId: string, tipo: string) => {
+    if (tipo === "video") {
+      // Para videos, mostrar URL o abrir en nueva ventana
+      const material = materiales.find((m) => m.id === materialId)
+      if (material?.url) {
+        window.open(material.url, "_blank")
+      } else {
+        alert("No hay URL disponible para este video")
+      }
+      return
+    }
+
+    // Para archivos, usar el sistema de almacenamiento
+    const archivo = FileStorage.obtenerArchivo(materialId)
+    if (archivo) {
+      if (FileStorage.previsualizarArchivo(materialId)) {
+        console.log("Archivo previsualizado exitosamente")
+      } else {
+        alert("Error al previsualizar el archivo")
+      }
+    } else {
+      alert("No hay archivo disponible para previsualizar")
+    }
+  }
+
+  const handleDescargar = (materialId: string, tipo: string) => {
+    if (tipo === "video") {
+      // Para videos, copiar URL al portapapeles
+      const material = materiales.find((m) => m.id === materialId)
+      if (material?.url) {
+        navigator.clipboard
+          .writeText(material.url)
+          .then(() => {
+            alert("URL del video copiada al portapapeles")
+          })
+          .catch(() => {
+            alert(`URL del video: ${material.url}`)
+          })
+      } else {
+        alert("No hay URL disponible para este video")
+      }
+      return
+    }
+
+    // Para archivos, usar el sistema de almacenamiento
+    const archivo = FileStorage.obtenerArchivo(materialId)
+    if (archivo) {
+      if (FileStorage.descargarArchivo(materialId)) {
+        console.log("Archivo descargado exitosamente")
+      } else {
+        alert("Error al descargar el archivo")
+      }
+    } else {
+      alert("No hay archivo disponible para descargar")
+    }
+  }
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-teal-100 dark:from-gray-900 dark:to-green-900/30">
       <div className="container mx-auto p-6">
         <div className="mb-6">
           <div className="flex items-center gap-4 mb-4">
@@ -107,11 +175,11 @@ export default function MaterialesPage() {
             </Link>
           </div>
 
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Material Educativo</h1>
-          <p className="text-gray-600">Consultar y gestionar recursos educativos del sistema</p>
+          <h1 className="text-3xl font-bold text-base-content mb-2">Material Educativo</h1>
+          <p className="text-base-content/70">Consultar y gestionar recursos educativos del sistema</p>
         </div>
 
-        <Card className="bg-white shadow-lg mb-6">
+        <Card className="bg-white dark:bg-gray-800 shadow-lg hover:shadow-xl transition-shadow mb-6">
           <CardHeader>
             <div className="flex justify-between items-center">
               <div>
@@ -119,7 +187,7 @@ export default function MaterialesPage() {
                 <CardDescription>Total de materiales: {materialesFiltrados.length}</CardDescription>
               </div>
               <Link href="/materiales/nuevo">
-                <Button>
+                <Button className="bg-blue-600 text-white hover:bg-blue-700 dark:text-white">
                   <Plus className="h-4 w-4 mr-2" />
                   Subir Material
                 </Button>
@@ -166,10 +234,20 @@ export default function MaterialesPage() {
                       <TableCell>{formatearFecha(material.fechaSubida)}</TableCell>
                       <TableCell>
                         <div className="flex gap-2">
-                          <Button variant="outline" size="sm">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handlePrevisualizar(material.id, material.tipo)}
+                            title="Previsualizar"
+                          >
                             <Eye className="h-4 w-4" />
                           </Button>
-                          <Button variant="outline" size="sm">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDescargar(material.id, material.tipo)}
+                            title="Descargar"
+                          >
                             <Download className="h-4 w-4" />
                           </Button>
                         </div>

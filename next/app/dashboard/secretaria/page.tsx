@@ -139,14 +139,14 @@ function SecretariaDashboardContent() {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
               <Link href="/estudiantes/nuevo">
-                <Button className="w-full">
+                <Button className="w-full bg-blue-600 text-white hover:bg-blue-700 dark:text-white">
                   <Plus className="h-4 w-4 mr-2" />
                   Alta de Estudiante
                 </Button>
               </Link>
             </div>
             <Link href="/estudiantes">
-              <Button className="w-full" variant="secondary">
+              <Button className="w-full" variant="outline">
                 Ver Todos los Estudiantes
               </Button>
             </Link>
@@ -165,7 +165,7 @@ function SecretariaDashboardContent() {
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                <Button onClick={handleGenerarReporteRendimiento} className="w-full">
+                <Button onClick={handleGenerarReporteRendimiento} className="w-full bg-blue-600 text-white hover:bg-blue-700 dark:text-white">
                   <Plus className="h-4 w-4 mr-2" />
                   Generar Reporte de Rendimiento
                 </Button>
@@ -219,7 +219,7 @@ function SecretariaDashboardContent() {
                     className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 py-2 px-3 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:text-white"
                   />
                 </div>
-                <Button onClick={handleEnviarSolicitud} disabled={enviandoSolicitud} className="w-full">
+                <Button onClick={handleEnviarSolicitud} disabled={enviandoSolicitud} className="w-full bg-blue-600 text-white hover:bg-blue-700 dark:text-white">
                   {enviandoSolicitud ? "Enviando..." : "Enviar Solicitud"}
                 </Button>
               </div>

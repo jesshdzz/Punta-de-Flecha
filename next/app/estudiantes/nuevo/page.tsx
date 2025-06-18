@@ -106,7 +106,7 @@ export default function NuevoEstudiantePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 dark:from-gray-900 dark:to-purple-900/30">
       <div className="container mx-auto p-6">
         <div className="mb-6">
           <div className="flex items-center gap-4 mb-4">
@@ -118,11 +118,11 @@ export default function NuevoEstudiantePage() {
             </Link>
           </div>
 
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Alta de Estudiante</h1>
-          <p className="text-gray-600">Registrar un nuevo estudiante en el sistema</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-base-content mb-2">Alta de Estudiante</h1>
+          <p className="text-gray-600 dark:text-base-content/70">Registrar un nuevo estudiante en el sistema</p>
         </div>
 
-        <Card className="bg-white shadow-lg max-w-2xl mx-auto">
+        <Card className="bg-white dark:bg-gray-800 shadow-lg hover:shadow-xl transition-shadow max-w-2xl mx-auto">
           <CardHeader>
             <CardTitle>Información del Estudiante</CardTitle>
             <CardDescription>Complete todos los campos requeridos para registrar al estudiante</CardDescription>
@@ -174,7 +174,7 @@ export default function NuevoEstudiantePage() {
                     <SelectTrigger className={errores.grado ? "border-red-500" : ""}>
                       <SelectValue placeholder="Seleccione el grado" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="dark:bg-gray-800 bg-white">
                       <SelectItem value="1°">1° Grado</SelectItem>
                       <SelectItem value="2°">2° Grado</SelectItem>
                       <SelectItem value="3°">3° Grado</SelectItem>
@@ -189,7 +189,7 @@ export default function NuevoEstudiantePage() {
                     <SelectTrigger className={errores.grupo ? "border-red-500" : ""}>
                       <SelectValue placeholder="Seleccione el grupo" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="dark:bg-gray-800 bg-white">
                       <SelectItem value="A">Grupo A</SelectItem>
                       <SelectItem value="B">Grupo B</SelectItem>
                       <SelectItem value="C">Grupo C</SelectItem>
@@ -205,7 +205,7 @@ export default function NuevoEstudiantePage() {
                     Cancelar
                   </Button>
                 </Link>
-                <Button type="submit" disabled={guardando} className="flex-1">
+                <Button type="submit" disabled={guardando} className="flex-1 bg-blue-600 text-white hover:bg-blue-700 dark:text-white">
                   {guardando ? (
                     "Guardando..."
                   ) : (

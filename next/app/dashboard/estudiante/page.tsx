@@ -2,11 +2,32 @@
 
 import { AuthGuard } from "@/components/auth-guard"
 import { useState, useEffect } from "react"
-import { TrendingUp, BookOpen, Bell, LogOut, Download, Eye, FileText, Video, Presentation } from "lucide-react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Separator } from "@/components/ui/separator"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import {
+  TrendingUp,
+  BookOpen,
+  Bell,
+  LogOut,
+  Download,
+  Eye,
+  FileText,
+  Video,
+  Presentation,
+  GraduationCap,
+  Calendar,
+  ExternalLink,
+} from "lucide-react"
 import { BaseDatos } from "@/lib/database"
 import { SistemaAutenticacion } from "@/lib/auth"
 import type { Calificacion, MaterialEducativo, Materia } from "@/types"
 import { useRouter } from "next/navigation"
+import { FileStorage } from "@/lib/file-storage"
 
 function EstudianteDashboardContent() {
   const [calificaciones, setCalificaciones] = useState<Calificacion[]>([])
@@ -54,39 +75,39 @@ function EstudianteDashboardContent() {
   }
 
   const getColorCalificacion = (valor: number) => {
-    if (valor >= 9) return "badge-success"
-    if (valor >= 7) return "badge-warning"
-    if (valor >= 6) return "badge-info"
-    return "badge-error"
+    if (valor >= 9) return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+    if (valor >= 7) return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+    if (valor >= 6) return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+    return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
   }
 
   const getIconoTipo = (tipo: string) => {
     switch (tipo) {
       case "libro":
-        return <BookOpen size={16} />
+        return <BookOpen className="h-4 w-4" />
       case "documento":
-        return <FileText size={16} />
+        return <FileText className="h-4 w-4" />
       case "video":
-        return <Video size={16} />
+        return <Video className="h-4 w-4" />
       case "presentacion":
-        return <Presentation size={16} />
+        return <Presentation className="h-4 w-4" />
       default:
-        return <FileText size={16} />
+        return <FileText className="h-4 w-4" />
     }
   }
 
   const getColorTipo = (tipo: string) => {
     switch (tipo) {
       case "libro":
-        return "badge-primary"
+        return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
       case "documento":
-        return "badge-success"
+        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
       case "video":
-        return "badge-error"
+        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
       case "presentacion":
-        return "badge-secondary"
+        return "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200"
       default:
-        return "badge-neutral"
+        return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200"
     }
   }
 
@@ -98,179 +119,302 @@ function EstudianteDashboardContent() {
     return fecha.toLocaleDateString("es-ES")
   }
 
+  const handlePrevisualizarMaterial = (materialId: string) => {
+    if (FileStorage.previsualizarArchivo(materialId)) {
+      console.log("Material previsualizado exitosamente")
+    } else {
+      alert("Error al previsualizar el material")
+    }
+  }
+
+  const handleDescargarMaterial = (materialId: string) => {
+    if (FileStorage.descargarArchivo(materialId)) {
+      console.log("Material descargado exitosamente")
+    } else {
+      alert("Error al descargar el material")
+    }
+  }
+
+  const handleVerVideo = (url: string) => {
+    window.open(url, "_blank")
+  }
+
+  const handleCopiarURL = (url: string) => {
+    navigator.clipboard
+      .writeText(url)
+      .then(() => {
+        alert("URL del video copiada al portapapeles")
+      })
+      .catch(() => {
+        alert(`URL del video: ${url}`)
+      })
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-estudiante" data-theme="school">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 dark:from-gray-900 dark:to-purple-900/30 p-6">
       <div className="container mx-auto p-6">
-        {/* Header */}
-        <div className="navbar bg-base-100 rounded-box shadow-lg mb-6">
-          <div className="flex-1">
-            <div>
-              <h1 className="text-3xl font-bold">Panel del Estudiante</h1>
-              <p className="text-base-content/70">Bienvenido, {usuario?.nombre}</p>
-            </div>
+        {/* Cabecera */}
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">Panel del Estudiante</h1>
+            <p className="text-gray-600 dark:text-gray-300">Bienvenido, {usuario?.nombre}</p>
           </div>
-          <div className="flex-none">
-            <button className="btn btn-outline btn-error" onClick={handleLogout}>
-              <LogOut size={16} />
-              Cerrar Sesión
-            </button>
-          </div>
+          <Button variant="outline" onClick={handleLogout}>
+            <LogOut size={16} className="mr-2" />
+            Cerrar Sesión
+          </Button>
         </div>
 
         {/* Notificaciones */}
         {notificaciones.filter((n) => !n.leida).length > 0 && (
-          <div className="alert alert-info mb-6 animate-fade-in">
-            <Bell size={20} />
-            <div>
-              <h3 className="font-bold">Notificaciones ({notificaciones.filter((n) => !n.leida).length})</h3>
-              <div className="space-y-2 mt-2">
-                {notificaciones
-                  .filter((n) => !n.leida)
-                  .map((notif) => (
-                    <div key={notif.id} className="card bg-base-100 shadow-sm">
-                      <div className="card-body p-3">
-                        <p className="font-medium">{notif.mensaje}</p>
-                        <p className="text-sm opacity-70">{formatearFecha(notif.fecha)}</p>
-                      </div>
-                    </div>
-                  ))}
+          <Alert className="mb-6 border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950">
+            <Bell className="h-4 w-4" />
+            <AlertDescription>
+              <div className="flex justify-between items-center">
+                <span className="font-medium">
+                  Tienes {notificaciones.filter((n) => !n.leida).length} notificaciones nuevas
+                </span>
+                <Button variant="ghost" size="sm">
+                  Ver todas
+                </Button>
               </div>
-            </div>
-          </div>
+            </AlertDescription>
+          </Alert>
         )}
 
-        {/* Estadísticas del estudiante */}
+        {/* Estadísticas principales */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="stat bg-base-100 rounded-box shadow-lg">
-            <div className="stat-figure text-success">
-              <TrendingUp size={32} />
-            </div>
-            <div className="stat-title">Mi Promedio</div>
-            <div className="stat-value text-success">{promedioGeneral.toFixed(1)}</div>
-            <div className="stat-desc">
-              <div className={`badge ${getColorCalificacion(promedioGeneral)}`}>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium dark:text-white">Mi Promedio</CardTitle>
+              <TrendingUp className="h-4 w-4 text-green-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-green-600 mb-2">{promedioGeneral.toFixed(1)}</div>
+              <Badge variant="secondary" className={getColorCalificacion(promedioGeneral)}>
                 {promedioGeneral >= 6 ? "Aprobado" : "Necesita Mejorar"}
-              </div>
-            </div>
-          </div>
+              </Badge>
+            </CardContent>
+          </Card>
 
-          <div className="stat bg-base-100 rounded-box shadow-lg">
-            <div className="stat-figure text-secondary">
-              <BookOpen size={32} />
-            </div>
-            <div className="stat-title">Material Disponible</div>
-            <div className="stat-value text-secondary">{materiales.length}</div>
-            <div className="stat-desc">Recursos educativos</div>
-          </div>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium dark:text-white">Material Disponible</CardTitle>
+              <BookOpen className="h-4 w-4 text-blue-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-blue-600 mb-2">{materiales.length}</div>
+              <p className="text-xs text-muted-foreground">Recursos educativos</p>
+            </CardContent>
+          </Card>
 
-          <div className="stat bg-base-100 rounded-box shadow-lg">
-            <div className="stat-figure text-primary">
-              <FileText size={32} />
-            </div>
-            <div className="stat-title">Calificaciones</div>
-            <div className="stat-value text-primary">{calificaciones.length}</div>
-            <div className="stat-desc">Registradas</div>
-          </div>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium dark:text-white">Calificaciones</CardTitle>
+              <FileText className="h-4 w-4 text-purple-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-purple-600 mb-2">{calificaciones.length}</div>
+              <p className="text-xs text-muted-foreground">Registradas</p>
+            </CardContent>
+          </Card>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Mis Calificaciones */}
-          <div className="card bg-base-100 shadow-lg">
-            <div className="card-body">
-              <h2 className="card-title">Mis Calificaciones</h2>
-              <p className="text-base-content/70">Historial de calificaciones por materia</p>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 dark:text-white">
+                <TrendingUp className="h-5 w-5 text-green-600" />
+                Mis Calificaciones
+              </CardTitle>
+              <CardDescription>Historial de calificaciones por materia y periodo</CardDescription>
+            </CardHeader>
+            <CardContent>
               {calificaciones.length > 0 ? (
-                <div className="overflow-x-auto mt-4">
-                  <table className="table table-zebra table-compact w-full">
-                    <thead>
-                      <tr>
-                        <th>Materia</th>
-                        <th>Calificación</th>
-                        <th>Periodo</th>
-                        <th>Estado</th>
-                      </tr>
-                    </thead>
-                    <tbody>
+                <ScrollArea className="h-[400px]">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Materia</TableHead>
+                        <TableHead>Calificación</TableHead>
+                        <TableHead>Periodo</TableHead>
+                        <TableHead>Estado</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
                       {calificaciones.map((calificacion) => {
                         const materia = materias.get(calificacion.materiaId)
                         return (
-                          <tr key={calificacion.id}>
-                            <td className="font-medium">{materia?.nombre || "Materia no encontrada"}</td>
-                            <td>
-                              <div className={`badge ${getColorCalificacion(calificacion.valor)}`}>
+                          <TableRow key={calificacion.id}>
+                            <TableCell className="font-medium dark:text-white">
+                              {materia?.nombre || "Materia no encontrada"}
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="secondary" className={getColorCalificacion(calificacion.valor)}>
                                 {calificacion.valor.toFixed(1)}
-                              </div>
-                            </td>
-                            <td>{formatearPeriodo(calificacion.periodo)}</td>
-                            <td>
-                              <div className={`badge ${calificacion.valor >= 6 ? "badge-success" : "badge-error"}`}>
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="dark:text-white">{formatearPeriodo(calificacion.periodo)}</TableCell>
+                            <TableCell>
+                              <Badge variant={calificacion.valor >= 6 ? "default" : "destructive"}>
                                 {calificacion.valor >= 6 ? "Aprobado" : "Reprobado"}
-                              </div>
-                            </td>
-                          </tr>
+                              </Badge>
+                            </TableCell>
+                          </TableRow>
                         )
                       })}
-                    </tbody>
-                  </table>
-                </div>
+                    </TableBody>
+                  </Table>
+                </ScrollArea>
               ) : (
-                <div className="text-center py-8">
-                  <TrendingUp size={48} className="mx-auto opacity-30 mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">No hay calificaciones</h3>
-                  <p className="opacity-70">Tus calificaciones aparecerán aquí cuando sean registradas</p>
+                <div className="text-center py-12">
+                  <TrendingUp className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">No hay calificaciones</h3>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    Tus calificaciones aparecerán aquí cuando sean registradas
+                  </p>
                 </div>
               )}
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
           {/* Material Educativo */}
-          <div className="card bg-base-100 shadow-lg">
-            <div className="card-body">
-              <h2 className="card-title">Material Educativo</h2>
-              <p className="text-base-content/70">Recursos disponibles para estudio</p>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 dark:text-white">
+                <BookOpen className="h-5 w-5 text-blue-600" />
+                Material Educativo
+              </CardTitle>
+              <CardDescription>Recursos disponibles para estudio</CardDescription>
+            </CardHeader>
+            <CardContent>
               {materiales.length > 0 ? (
-                <div className="space-y-3 max-h-96 overflow-y-auto mt-4">
-                  {materiales.map((material) => {
-                    const materia = materias.get(material.materiaId)
-                    return (
-                      <div key={material.id} className="card bg-base-200 shadow-sm">
-                        <div className="card-body p-3">
-                          <div className="flex justify-between items-start mb-2">
-                            <h4 className="font-medium text-sm">{material.titulo}</h4>
-                            <div className={`badge ${getColorTipo(material.tipo)} gap-1`}>
-                              {getIconoTipo(material.tipo)}
-                              {material.tipo}
+                <ScrollArea className="h-[400px]">
+                  <div className="space-y-4">
+                    {materiales.map((material) => {
+                      const materia = materias.get(material.materiaId)
+                      const tieneArchivo = FileStorage.obtenerArchivo(material.id) !== null
+
+                      return (
+                        <Card key={material.id} className="bg-gray-50 dark:bg-gray-700 shadow-sm">
+                          <CardContent className="p-4">
+                            <div className="flex justify-between items-start mb-3">
+                              <div className="flex-1">
+                                <h4 className="font-semibold text-gray-900 dark:text-white mb-1">{material.titulo}</h4>
+                                <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">{material.descripcion}</p>
+                                <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                                  <Calendar className="h-3 w-3" />
+                                  {formatearFecha(material.fechaSubida)}
+                                  <Separator orientation="vertical" className="h-3" />
+                                  <span>{materia?.nombre}</span>
+                                </div>
+                              </div>
+                              <Badge variant="secondary" className={`${getColorTipo(material.tipo)} ml-2`}>
+                                <span className="flex items-center gap-1">
+                                  {getIconoTipo(material.tipo)}
+                                  {material.tipo}
+                                </span>
+                              </Badge>
                             </div>
-                          </div>
-                          <p className="text-xs opacity-70 mb-2">{material.descripcion}</p>
-                          <div className="flex justify-between items-center">
-                            <span className="text-xs opacity-60">
-                              {materia?.nombre} - {formatearFecha(material.fechaSubida)}
-                            </span>
-                            <div className="flex gap-1">
-                              <button className="btn btn-ghost btn-xs">
-                                <Eye size={12} />
-                              </button>
-                              <button className="btn btn-ghost btn-xs">
-                                <Download size={12} />
-                              </button>
+
+                            <div className="flex gap-2">
+                              {material.tipo === "video" && material.url ? (
+                                <>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => handleVerVideo(material.url!)}
+                                    className="flex-1"
+                                  >
+                                    <ExternalLink className="h-4 w-4 mr-2" />
+                                    Ver Video
+                                  </Button>
+                                  <Button size="sm" variant="outline" onClick={() => handleCopiarURL(material.url!)}>
+                                    <Download className="h-4 w-4" />
+                                  </Button>
+                                </>
+                              ) : tieneArchivo ? (
+                                <>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => handlePrevisualizarMaterial(material.id)}
+                                    className="flex-1"
+                                  >
+                                    <Eye className="h-4 w-4 mr-2" />
+                                    Previsualizar
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => handleDescargarMaterial(material.id)}
+                                  >
+                                    <Download className="h-4 w-4" />
+                                  </Button>
+                                </>
+                              ) : (
+                                <div className="flex-1 text-center py-2">
+                                  <span className="text-sm text-gray-400">Sin archivo disponible</span>
+                                </div>
+                              )}
                             </div>
-                          </div>
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
+                          </CardContent>
+                        </Card>
+                      )
+                    })}
+                  </div>
+                </ScrollArea>
               ) : (
-                <div className="text-center py-8">
-                  <BookOpen size={48} className="mx-auto opacity-30 mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">No hay material disponible</h3>
-                  <p className="opacity-70">Los profesores subirán material educativo aquí</p>
+                <div className="text-center py-12">
+                  <BookOpen className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                    No hay material disponible
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-400">Los profesores subirán material educativo aquí</p>
                 </div>
               )}
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </div>
+
+        {/* Notificaciones detalladas */}
+        {notificaciones.filter((n) => !n.leida).length > 0 && (
+          <Card className="mt-8">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 dark:text-white">
+                <Bell className="h-5 w-5 text-orange-600" />
+                Notificaciones Recientes
+              </CardTitle>
+              <CardDescription>Últimas actualizaciones del sistema</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {notificaciones
+                  .filter((n) => !n.leida)
+                  .map((notif) => (
+                    <Alert key={notif.id} className="border-l-4 border-l-blue-500">
+                      <Bell className="h-4 w-4" />
+                      <AlertDescription>
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <p className="font-medium dark:text-white">{notif.mensaje}</p>
+                            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                              {formatearFecha(notif.fecha)}
+                            </p>
+                          </div>
+                          <Button variant="ghost" size="sm">
+                            Marcar como leída
+                          </Button>
+                        </div>
+                      </AlertDescription>
+                    </Alert>
+                  ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
       </div>
     </div>
   )

@@ -63,7 +63,7 @@ export default function GenerarReportePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
       <div className="container mx-auto p-6">
         <div className="mb-6">
           <div className="flex items-center gap-4 mb-4">
@@ -75,12 +75,12 @@ export default function GenerarReportePage() {
             </Link>
           </div>
 
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Generar Reporte</h1>
-          <p className="text-gray-600">Crear reportes personalizados del sistema escolar</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-base-content mb-2">Generar Reporte</h1>
+          <p className="text-base-content/70">Crear reportes personalizados del sistema escolar</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card className="bg-white shadow-lg">
+          <Card className="bg-white dark:bg-gray-800 shadow-lg hover:shadow-xl transition-shadow">
             <CardHeader>
               <CardTitle>Configuración del Reporte</CardTitle>
               <CardDescription>Seleccione el tipo de reporte que desea generar</CardDescription>
@@ -92,7 +92,7 @@ export default function GenerarReportePage() {
                   <SelectTrigger>
                     <SelectValue placeholder="Seleccione un tipo de reporte" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="dark:bg-gray-800 bg-white">
                     <SelectItem value="estudiantes">Reporte de Estudiantes</SelectItem>
                     <SelectItem value="calificaciones">Reporte de Calificaciones</SelectItem>
                     <SelectItem value="asistencia">Reporte de Asistencia</SelectItem>
@@ -101,7 +101,7 @@ export default function GenerarReportePage() {
                 </Select>
               </div>
 
-              <Button onClick={handleGenerarReporte} disabled={!tipoReporte || generando} className="w-full">
+              <Button onClick={handleGenerarReporte} disabled={!tipoReporte || generando} className="w-full bg-blue-600 text-white hover:bg-blue-700 dark:text-white">
                 {generando ? (
                   "Generando..."
                 ) : (

@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ArrowLeft, Save, Upload } from "lucide-react"
 import { BaseDatos } from "@/lib/database"
+import { FileStorage } from "@/lib/file-storage"
 import type { MaterialEducativo, Materia } from "@/types"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -27,6 +28,7 @@ export default function NuevoMaterialPage() {
   const [errores, setErrores] = useState<Record<string, string>>({})
   const [guardando, setGuardando] = useState(false)
   const router = useRouter()
+  const [archivoSeleccionado, setArchivoSeleccionado] = useState<File | null>(null)
 
   useEffect(() => {
     const db = BaseDatos.getInstance()
@@ -71,9 +73,15 @@ export default function NuevoMaterialPage() {
 
     try {
       const db = BaseDatos.getInstance()
+      const materialId = "mat_" + Date.now().toString()
+
+      // Si hay archivo seleccionado, guardarlo en localStorage
+      if (archivoSeleccionado) {
+        await FileStorage.guardarArchivo(archivoSeleccionado, materialId)
+      }
 
       const nuevoMaterial: MaterialEducativo = {
-        id: "mat_" + Date.now().toString(),
+        id: materialId,
         titulo: formData.titulo,
         descripcion: formData.descripcion,
         tipo: formData.tipo,
@@ -103,8 +111,55 @@ export default function NuevoMaterialPage() {
     }
   }
 
+  const handleSeleccionarArchivo = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const archivo = event.target.files?.[0]
+    if (archivo) {
+      // Validar tipo de archivo
+      const tiposPermitidos = [
+        "application/pdf",
+        "application/msword",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "application/vnd.ms-powerpoint",
+        "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      ]
+
+      if (!tiposPermitidos.includes(archivo.type)) {
+        alert("Tipo de archivo no permitido. Solo se permiten PDF, DOC, DOCX, PPT, PPTX")
+        return
+      }
+
+      // Validar tamaño (10MB = 10 * 1024 * 1024 bytes)
+      if (archivo.size > 10 * 1024 * 1024) {
+        alert("El archivo es demasiado grande. Máximo 10MB permitido.")
+        return
+      }
+
+      setArchivoSeleccionado(archivo)
+    }
+  }
+
+  const handleDragOver = (event: React.DragEvent) => {
+    event.preventDefault()
+  }
+
+  const handleDrop = (event: React.DragEvent) => {
+    event.preventDefault()
+    const archivo = event.dataTransfer.files[0]
+    if (archivo) {
+      // Simular evento de input para reutilizar la validación
+      const fakeEvent = {
+        target: { files: [archivo] },
+      } as React.ChangeEvent<HTMLInputElement>
+      handleSeleccionarArchivo(fakeEvent)
+    }
+  }
+
+  const handleClickSeleccionar = () => {
+    document.getElementById("archivo-input")?.click()
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-teal-100 dark:from-gray-900 dark:to-green-900/30" data-theme="dim">
       <div className="container mx-auto p-6">
         <div className="mb-6">
           <div className="flex items-center gap-4 mb-4">
@@ -116,11 +171,11 @@ export default function NuevoMaterialPage() {
             </Link>
           </div>
 
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Subir Material Educativo</h1>
-          <p className="text-gray-600">Agregar un nuevo recurso educativo al sistema</p>
+          <h1 className="text-3xl font-bold text-base-content mb-2">Subir Material Educativo</h1>
+          <p className="text-base-content/70">Agregar un nuevo recurso educativo al sistema</p>
         </div>
 
-        <Card className="bg-white shadow-lg max-w-2xl mx-auto">
+        <Card className="bg-white dark:bg-gray-800 shadow-lg hover:shadow-xl transition-shadow max-w-2xl mx-auto">
           <CardHeader>
             <CardTitle>Información del Material</CardTitle>
             <CardDescription>Complete todos los campos requeridos para subir el material educativo</CardDescription>
@@ -159,7 +214,7 @@ export default function NuevoMaterialPage() {
                     <SelectTrigger className={errores.tipo ? "border-red-500" : ""}>
                       <SelectValue placeholder="Seleccione el tipo" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="dark:bg-gray-800">
                       <SelectItem value="libro">Libro</SelectItem>
                       <SelectItem value="documento">Documento</SelectItem>
                       <SelectItem value="video">Video</SelectItem>
@@ -175,7 +230,7 @@ export default function NuevoMaterialPage() {
                     <SelectTrigger className={errores.materiaId ? "border-red-500" : ""}>
                       <SelectValue placeholder="Seleccione la materia" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="dark:bg-gray-800">
                       {materias.map((materia) => (
                         <SelectItem key={materia.id} value={materia.id}>
                           {materia.nombre} - {materia.grado}
@@ -205,16 +260,51 @@ export default function NuevoMaterialPage() {
               {(formData.tipo === "documento" || formData.tipo === "libro" || formData.tipo === "presentacion") && (
                 <div className="space-y-2">
                   <Label htmlFor="archivo">Archivo (Opcional)</Label>
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                  <div
+                    className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors"
+                    onDragOver={handleDragOver}
+                    onDrop={handleDrop}
+                  >
                     <Upload className="h-8 w-8 mx-auto text-gray-400 mb-2" />
-                    <p className="text-sm text-gray-600">
-                      Arrastra y suelta tu archivo aquí, o{" "}
-                      <button type="button" className="text-blue-600 hover:underline">
-                        selecciona un archivo
-                      </button>
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">PDF, DOC, DOCX, PPT, PPTX (máx. 10MB)</p>
+                    {archivoSeleccionado ? (
+                      <div className="space-y-2">
+                        <p className="text-sm font-medium text-green-600">
+                          Archivo seleccionado: {archivoSeleccionado.name}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          Tamaño: {(archivoSeleccionado.size / 1024 / 1024).toFixed(2)} MB
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => setArchivoSeleccionado(null)}
+                          className="text-red-600 hover:underline text-sm"
+                        >
+                          Remover archivo
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        <p className="text-sm text-gray-600">
+                          Arrastra y suelta tu archivo aquí, o{" "}
+                          <button
+                            type="button"
+                            onClick={handleClickSeleccionar}
+                            className="text-blue-600 hover:underline"
+                          >
+                            selecciona un archivo
+                          </button>
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">PDF, DOC, DOCX, PPT, PPTX (máx. 10MB)</p>
+                      </>
+                    )}
                   </div>
+                  <input
+                    id="archivo-input"
+                    type="file"
+                    accept=".pdf,.doc,.docx,.ppt,.pptx"
+                    onChange={handleSeleccionarArchivo}
+                    className="hidden"
+                  />
                 </div>
               )}
 
@@ -224,7 +314,7 @@ export default function NuevoMaterialPage() {
                     Cancelar
                   </Button>
                 </Link>
-                <Button type="submit" disabled={guardando} className="flex-1">
+                <Button type="submit" disabled={guardando} className="bg-blue-600 text-white hover:bg-blue-700 flex-1 text-balck dark:text-white">
                   {guardando ? (
                     "Subiendo..."
                   ) : (

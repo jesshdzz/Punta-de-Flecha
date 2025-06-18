@@ -95,7 +95,7 @@ export default function CalificacionesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-teal-100 dark:from-gray-900 dark:to-green-900/30">
       <div className="container mx-auto p-6">
         <div className="mb-6">
           <div className="flex items-center gap-4 mb-4">
@@ -107,11 +107,11 @@ export default function CalificacionesPage() {
             </Link>
           </div>
 
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Gestión de Calificaciones</h1>
-          <p className="text-gray-600">Consultar y administrar calificaciones de estudiantes</p>
+          <h1 className="text-3xl font-bold text-base-content mb-2">Gestión de Calificaciones</h1>
+          <p className="text-base-content/70">Consultar y administrar calificaciones de estudiantes</p>
         </div>
 
-        <Card className="bg-white shadow-lg mb-6">
+        <Card className="bg-white dark:bg-gray-800 shadow-lg hover:shadow-xl transition-shadow mb-6">
           <CardHeader>
             <div className="flex justify-between items-center">
               <div>
@@ -119,7 +119,7 @@ export default function CalificacionesPage() {
                 <CardDescription>Total de calificaciones: {calificacionesFiltradas.length}</CardDescription>
               </div>
               <Link href="/calificaciones/subir">
-                <Button>
+                <Button className="bg-blue-600 text-white hover:bg-blue-700 dark:text-white">
                   <Plus className="h-4 w-4 mr-2" />
                   Subir Calificación
                 </Button>

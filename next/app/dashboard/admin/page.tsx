@@ -43,7 +43,7 @@ function AdminDashboardContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800" data-theme="dim">
       <div className="container mx-auto p-6">
         <div className="mb-6">
           <div className="flex items-center gap-4 mb-4">
@@ -140,7 +140,7 @@ function AdminDashboardContent() {
         </div>
 
         {/* Acciones rápidas */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
           <Card className="bg-white dark:bg-gray-800 shadow-lg hover:shadow-xl transition-shadow">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 dark:text-white">
@@ -151,24 +151,11 @@ function AdminDashboardContent() {
             </CardHeader>
             <CardContent className="space-y-2">
               <Link href="/estudiantes">
-                <Button className="w-full" variant="outline">
+                <Button className="w-full dark:text-white" variant="outline">
                   Ver Estudiantes
                 </Button>
               </Link>
-              <div className="grid grid-cols-2 gap-2">
-                <Link href="/estudiantes/modificar">
-                  <Button className="w-full" variant="outline">
-                    <UserCog className="h-4 w-4 mr-2" />
-                    Modificar
-                  </Button>
-                </Link>
-                <Link href="/estudiantes/eliminar">
-                  <Button className="w-full" variant="outline">
-                    <UserX className="h-4 w-4 mr-2" />
-                    Eliminar
-                  </Button>
-                </Link>
-              </div>
+              
             </CardContent>
           </Card>
 
@@ -182,27 +169,14 @@ function AdminDashboardContent() {
             </CardHeader>
             <CardContent className="space-y-2">
               <Link href="/usuarios">
-                <Button className="w-full" variant="outline">
+                <Button className="w-full dark:text-white" variant="outline">
                   Ver Usuarios
                 </Button>
               </Link>
               <Link href="/usuarios/nuevo">
-                <Button className="w-full">Alta Usuario</Button>
+                <Button className="w-full bg-blue-600 text-white hover:bg-blue-700 dark:text-white">Alta Usuario</Button>
               </Link>
-              <div className="grid grid-cols-2 gap-2">
-                <Link href="/usuarios/modificar">
-                  <Button className="w-full" variant="outline">
-                    <UserCog className="h-4 w-4 mr-2" />
-                    Modificar
-                  </Button>
-                </Link>
-                <Link href="/usuarios/eliminar">
-                  <Button className="w-full" variant="outline">
-                    <UserX className="h-4 w-4 mr-2" />
-                    Eliminar
-                  </Button>
-                </Link>
-              </div>
+
             </CardContent>
           </Card>
 
@@ -216,12 +190,12 @@ function AdminDashboardContent() {
             </CardHeader>
             <CardContent className="space-y-2">
               <Link href="/reportes">
-                <Button className="w-full" variant="outline">
+                <Button className="w-full dark:text-white" variant="outline">
                   Ver Reportes
                 </Button>
               </Link>
               <Link href="/reportes/generar">
-                <Button className="w-full">Generar Reporte</Button>
+                <Button className="w-full bg-blue-600 text-white hover:bg-blue-700 dark:text-white">Generar Reporte</Button>
               </Link>
             </CardContent>
           </Card>
