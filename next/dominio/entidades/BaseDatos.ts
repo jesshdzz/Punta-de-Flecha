@@ -1,14 +1,21 @@
 import { Estudiante } from "./Estudiante";
 import { Inscripcion } from "./Inscripcion";
+import { Reinscripcion } from "./Reinscripcion";
+import { BajaEstudiante } from "./BajaEstudiante";
 import { Pago } from "./Pago";
 import { Recibo } from "./Recibo";
 import { Tramite } from "./Tramite";
 import prisma from "@/lib/prisma"
+import { MaterialEducativo } from "./MaterialEducativo";
+import { ServicioNube } from "./ServicioNube";
+import { PrismaClient } from '@prisma/client';
+
 
 export class BaseDatos {
     private static instancia: BaseDatos
 
     constructor() { }
+    
 
     public static getInstancia(): BaseDatos {
         if (!BaseDatos.instancia) {
@@ -44,6 +51,7 @@ export class BaseDatos {
                 estudiante.setGrupo(estu.grupoId!);
                 estudiante.setId(usuario.id);
             })
+
 
             if (!estudiante.getId()) {
                 throw new Error("Error al crear el estudiante.");
@@ -202,7 +210,7 @@ export class BaseDatos {
             throw new Error("El usuario no existe.");
         }
         return true;
-    }
+    } 
 
     public async validarTramite(tramiteId: number): Promise<boolean> {
         const tramite = await prisma.tramite.findUnique({ where: { id: tramiteId } })
@@ -211,4 +219,155 @@ export class BaseDatos {
         }
         return true;
     }
+
+    public async actualizarDatosEstudiante(datos: {
+        estudianteId: number;
+        nombre?: string;
+        correo?: string;
+        telefono?: string;
+        contrasena?: string;
+        grupoId?: number;
+    }): Promise<void> {
+        try {
+            const actualizacionesUsuario: any = {};
+            const actualizacionesEstudiante: any = {};
+
+            if (datos.nombre) actualizacionesUsuario.nombre = datos.nombre;
+            if (datos.correo) actualizacionesUsuario.correo = datos.correo;
+            if (datos.telefono) actualizacionesUsuario.telefono = datos.telefono;
+            if (datos.contrasena) actualizacionesUsuario.contrasena = datos.contrasena;
+            if (datos.grupoId) actualizacionesEstudiante.grupoId = datos.grupoId;
+
+
+            await prisma.$transaction(async (tx) => {
+                if (Object.keys(actualizacionesUsuario).length > 0) {
+                    await tx.usuario.update({
+                        where: { id: datos.estudianteId },
+                        data: actualizacionesUsuario
+                    });
+                }
+
+                if (Object.keys(actualizacionesEstudiante).length > 0) {
+                    await tx.estudiante.update({
+                        where: { usuarioId: datos.estudianteId },
+                        data: actualizacionesEstudiante
+                    });
+                }
+            });
+        } catch (error) {
+            if (error instanceof Error) {
+                throw new Error("Error al actualizar el estudiante: " + error.message);
+            }
+            throw new Error("Error desconocido al actualizar el estudiante.");
+        }
+    }
+  
+    public async guardarReinscripcion(reinscripcion: Reinscripcion): Promise<boolean> {
+        try {
+            await this.validarGrupo(reinscripcion.getGrupoId());
+            await this.validarUsuario(reinscripcion.getEstudianteId());
+    
+            await prisma.$transaction(async (tx) => {
+                const tramite = await tx.tramite.create({
+                    data: {
+                        estudianteId: reinscripcion.getEstudianteId(),
+                        tipo: reinscripcion.getTipo(),
+                        estado: reinscripcion.getEstado(),
+                        fecha: reinscripcion.getFecha(),
+                    }
+                });
+    
+                await tx.inscripcion.create({
+                    data: {
+                        tramiteId: tramite.id,
+                        grupoId: reinscripcion.getGrupoId(),
+                    }
+                });
+    
+                reinscripcion.setId(tramite.id);
+            });
+    
+            if (!reinscripcion.getId()) {
+                throw new Error("Error al crear la reinscripción.");
+            }
+    
+            return true;
+        } catch (error) {
+            if (error instanceof Error) {
+                throw new Error("Error al guardar la reinscripción: " + error.message);
+            }
+            throw new Error("Error desconocido al guardar la reinscripción.");
+        }
+    }
+  
+    public async guardarBajaEstudiante(baja: BajaEstudiante): Promise<boolean> {
+        try {
+          // 1) Validar que el estudiante exista
+          await this.validarUsuario(baja.getEstudianteId());
+    
+          // 2) Ejecutar todo en una transacción
+          await prisma.$transaction(async (tx) => {
+            // 2.a) Crear el trámite
+            const nuevoTramite = await tx.tramite.create({
+              data: {
+                estudianteId: baja.getEstudianteId(),
+                tipo: baja.getTipo(),
+                estado: baja.getEstado(),
+                fecha: baja.getFecha(),
+              },
+            });
+            baja.setId(nuevoTramite.id);
+    
+            // 2.b) Actualizar el estado del estudiante según el tipo de baja
+            const nuevoEstado = 
+              baja.getTipo() === "BajaTemporal" ? "BajaTemporal" : "BajaDefinitiva";
+    
+            await tx.estudiante.update({
+              where: { usuarioId: baja.getEstudianteId() },
+              data: { estado: nuevoEstado },
+            });
+          });
+    
+          return true;
+        } catch (error) {
+          if (error instanceof Error) {
+            throw new Error("Error al guardar la baja: " + error.message);
+          }
+          throw new Error("Error desconocido al guardar la baja.");
+        }
+      }
+   
+    public async guardarMaterial(datosPrisma: any) { // Puedes usar 'Prisma.MaterialEducativoCreateInput' si lo importas
+        try {
+            const materialCreado = await prisma.materialEducativo.create({
+                data: datosPrisma, // <-- Aquí ya tienes el objeto listo para Prisma
+            });
+            console.log("Material guardado en la base de datos.");
+            return materialCreado;
+        } catch (error) {
+            console.error("Error al guardar material en la base de datos (Prisma):", error);
+            throw error;
+        }
+    }
+
+    public async guardarArchivo(data: {
+    nombreArchivo: string,
+    urlNube: string,
+    material: {
+        connect: {
+            id: number
+        }
+    }
+    }): Promise<void> {
+        await prisma.archivoSubido.create({
+            data
+        });
+    }
+   public async actualizarExistenciaMaterial(materialId: number): Promise<void> {
+    await prisma.materialEducativo.update({
+        where: { id: materialId },
+        data: { existencia: true },
+    });
+   }
+
 }

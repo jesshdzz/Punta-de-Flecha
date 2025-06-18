@@ -1,4 +1,5 @@
 import { Docuemento } from "./Documento";
+import { MaterialEducativo } from "./MaterialEducativo";
 
 export class SistemaValidacion {
     private static instance: SistemaValidacion;
@@ -93,4 +94,85 @@ export class SistemaValidacion {
         }
         return true;
     }
+  
+    public validarActualizacionDatos(datos: {
+        estudianteId: number;
+        nombre?: string;
+        correo?: string;
+        telefono?: string;
+        contrasena?: string;
+        grupoId?: number;
+       // gradoId?: string;
+        reinscribir?: boolean;
+        montoReinscripcion?: number;
+      }): boolean {
+        // 1. El ID siempre obligatorio
+        if (!datos.estudianteId || datos.estudianteId <= 0) {
+          throw new Error("El ID del estudiante es obligatorio y debe ser válido.");
+        }
+      
+        // 2. Validaciones puntuales de opcionales
+        if (datos.correo)        this.validarCorreo(datos.correo);
+        if (datos.telefono)      this.validarTelefono(datos.telefono);
+        if (datos.contrasena)    this.validarContrasena(datos.contrasena);
+        if (datos.grupoId)       this.validarGrupo(datos.grupoId);
+        //if (datos.gradoId)       this.validarGrado(datos.gradoId);
+      
+        // 3. Si se está reinscribiendo, monto obligatorio y válido
+        if (datos.reinscribir) {
+          if (datos.montoReinscripcion == null) {
+            throw new Error("El monto de reinscripción es obligatorio al reinscribir.");
+          }
+          this.validarPago(datos.montoReinscripcion);
+        }
+      
+        return true;
+      }
+
+    //Validar Material Educativo
+    public validarMaterial(datos: {
+        titulo: string;
+        descripcion: string;
+        categoria: string;
+        }): void {
+        const { titulo, descripcion, categoria } = datos;
+
+        // Validar que existan
+        if (!titulo || titulo.trim() === '') {
+            throw new Error("El título del material es obligatorio.");
+        }
+
+        if (!descripcion || descripcion.trim() === '') {
+            throw new Error("La descripción del material es obligatoria.");
+        }
+
+        if (!categoria || categoria.trim() === '') {
+            throw new Error("La categoría del material es obligatoria.");
+        }
+
+        if (titulo.length < 5) {
+            throw new Error("El título debe tener al menos 5 caracteres.");
+        }
+
+        if (descripcion.length < 10) {
+            throw new Error("La descripción debe tener al menos 10 caracteres.");
+        }
+
+        const categoriasPermitidas = ['Matemáticas', 'Lenguaje', 'Ciencias', 'Historia', 'Otro'];
+        if (!categoriasPermitidas.includes(categoria)) {
+            throw new Error(`Categoría no válida. Las opciones válidas son: ${categoriasPermitidas.join(', ')}`);
+        }
+
+        console.log("Validación de material educativa exitosa.");
+        }
+
+    public validarExtensionesArchivos(archivos: File[]) {
+        const extensionesPermitidas = ['pdf', 'docx', 'pptx', 'jpg', 'png', 'mp4']; // ejemplo
+        for (const archivo of archivos) {
+        const extension = archivo.name.substring(archivo.name.lastIndexOf('.') + 1).toLowerCase();
+        if (!extensionesPermitidas.includes(extension)) {
+            throw new Error(`Archivo no permitido: ${archivo.name} (extensión .${extension})`);
+      }
+    }
+  }
 }

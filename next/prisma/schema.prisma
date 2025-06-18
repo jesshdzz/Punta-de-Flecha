@@ -23,6 +23,7 @@ model Usuario {
   puesto        RolUsuario
   fechaCreacion DateTime    @default(now())
   Estudiante    Estudiante?
+  Profesor      Profesor?
 }
 
 model Estudiante {
@@ -31,7 +32,15 @@ model Estudiante {
   tramites  Tramite[]
   grupo     Grupo?    @relation(fields: [grupoId], references: [id])
   usuario   Usuario   @relation(fields: [usuarioId], references: [id])
+  estado    EstadoEstudiante @default(Activo) 
 }
+
+model Profesor{
+  usuarioId     Int @id 
+  usuario       Usuario @relation(fields: [usuarioId], references: [id])
+  materiales MaterialEducativo[]
+}
+
 
 model Grupo {
   id            Int           @id @default(autoincrement())
@@ -75,6 +84,30 @@ model Recibo {
   pago   Pago     @relation(fields: [pagoId], references: [tramiteId])
 }
 
+
+model MaterialEducativo{
+  id          Int  @id @default(autoincrement())
+  titulo      String
+  descripcion String
+  categoria   String
+  existencia  Boolean  @default(false)
+  fecha       DateTime @default(now())
+  tipoArchivo String
+  profesorId  Int
+  profesor    Profesor @relation(fields: [profesorId], references: [usuarioId])
+  archivo     ArchivoSubido[]
+
+}
+
+
+model ArchivoSubido {
+  id            Int               @id @default(autoincrement())
+  materialId    Int
+  nombreArchivo String
+  urlNube       String
+  material      MaterialEducativo @relation(fields: [materialId], references: [id])
+}
+
 enum RolUsuario {
   Administrador
   Profesor
@@ -92,6 +125,12 @@ enum EstadoTramite {
 enum TipoTramite {
   Inscripcion
   Reinscripcion
-  Baja
+  BajaTemporal
+  BajaDefinitiva
   Pago
+}
+enum EstadoEstudiante {
+  Activo
+  BajaTemporal
+  BajaDefinitiva
 }

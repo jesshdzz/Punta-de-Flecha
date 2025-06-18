@@ -119,9 +119,12 @@ export default function EstudiantesPage() {
                       <TableCell>{formatearFecha(estudiante.fechaInscripcion)}</TableCell>
                       <TableCell>
                         <div className="flex gap-2">
+                          <Link href={`/estudiantes/modificar/${estudiante.id}`}>
                           <Button variant="outline" size="sm">
                             <Edit className="h-4 w-4" />
                           </Button>
+                          </Link>
+                          
                           {estudiante.activo && (
                             <Button
                               variant="outline"

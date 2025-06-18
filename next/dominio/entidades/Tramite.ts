@@ -1,4 +1,4 @@
-export type TipoTramite = 'Inscripcion' | 'Reinscripcion' | 'Baja' | 'Pago';
+export type TipoTramite = 'Inscripcion' | 'Reinscripcion' | 'BajaDefinitiva' | 'BajaTemporal'|'Pago';
 export type EstadoTramite = 'Rechazado' | 'Pendiente' | 'Aceptado';
 
 export abstract class Tramite {
