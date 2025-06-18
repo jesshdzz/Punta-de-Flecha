@@ -1,4 +1,3 @@
-// app/api/baja/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 import { PersonalSecretaria } from '@/dominio/entidades/PersonalSecretaria'
 

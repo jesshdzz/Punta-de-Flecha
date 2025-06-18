@@ -67,11 +67,11 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md bg-white dark:bg-gray-800 shadow-xl">
+    <div className="flex items-center justify-center min-h-screen p-4 bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+      <Card className="w-full max-w-md bg-white shadow-xl dark:bg-gray-800">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-4 w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center">
-            <GraduationCap className="h-6 w-6 text-white" />
+          <div className="flex items-center justify-center w-12 h-12 mx-auto mb-4 bg-blue-600 rounded-full">
+            <GraduationCap className="w-6 h-6 text-white" />
           </div>
           <CardTitle className="text-2xl font-bold text-gray-900 dark:text-white">Iniciar Sesión</CardTitle>
           <CardDescription className="dark:text-gray-300">Sistema de Administración Escolar</CardDescription>
@@ -111,13 +111,13 @@ export default function LoginPage() {
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                  className="absolute top-0 right-0 h-full px-3 py-2 hover:bg-transparent"
                   onClick={() => setShowPassword(!showPassword)}
                 >
                   {showPassword ? (
-                    <EyeOff className="h-4 w-4 text-gray-400" />
+                    <EyeOff className="w-4 h-4 text-gray-400" />
                   ) : (
-                    <Eye className="h-4 w-4 text-gray-400" />
+                    <Eye className="w-4 h-4 text-gray-400" />
                   )}
                 </Button>
               </div>
@@ -128,9 +128,9 @@ export default function LoginPage() {
             </Button>
           </form>
 
-          <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-            <h4 className="font-semibold text-sm mb-2 dark:text-white">Usuarios de prueba:</h4>
-            <div className="text-xs space-y-1 text-gray-600 dark:text-gray-300">
+          <div className="p-4 mt-6 rounded-lg bg-gray-50 dark:bg-gray-700">
+            <h4 className="mb-2 text-sm font-semibold dark:text-white">Usuarios de prueba:</h4>
+            <div className="space-y-1 text-xs text-gray-600 dark:text-gray-300">
               <div>
                 <strong>Admin:</strong> admin@escuela.com / admin123
               </div>

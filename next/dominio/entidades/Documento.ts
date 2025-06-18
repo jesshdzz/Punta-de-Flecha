@@ -1,6 +1,6 @@
 export type TipoDocumento = 'Acta de nacimiento' | 'CURP' | 'Comprobante de domicilio' | 'Certificado de estudios' | 'Carta de buena conducta' | 'Otro';
 
-export class Docuemento {
+export class Documento {
     constructor(
         private readonly id: number,
         private readonly nombre: string,
