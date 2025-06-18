@@ -1,5 +1,5 @@
 import { infoUsuario, Usuario } from './Usuario';
-export type EstadoEstudiante = "Activo" | "BajaTemoral" | "BajaDefinitiva"
+export type EstadoEstudiante = "Activo" | "BajaTemporal" | "BajaDefinitiva"
 
 export class Estudiante extends Usuario {
     private grupoId: number | null = null;

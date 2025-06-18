@@ -3,9 +3,11 @@ import { BaseDatos } from "./BaseDatos";
 import { Estudiante } from "./Estudiante";
 import { Inscripcion } from "./Inscripcion";
 import { Reinscripcion } from "./Reinscripcion";
+import { BajaEstudiante } from "./BajaEstudiante";
 import { Pago } from "./Pago";
 import { Recibo } from "./Recibo";
 import { SistemaValidacion } from "./SistemaValidacion";
+
 
 export class Sistema {
     private static instancia: Sistema;
@@ -141,5 +143,27 @@ export class Sistema {
           }
           throw new Error("Error desconocido al actualizar datos del estudiante.");
         }
+      }
+      public async darBajaEstudiante(datos: {
+        estudianteId: number,
+        tipo: "BajaTemporal" | "BajaDefinitiva",
+        motivo: string
+      }): Promise<void> {
+        // 0. (opcional) validar el motivo, el tipo, etc.
+        this.validador.validarCamposRequeridos({ estudianteId: datos.estudianteId, motivo: datos.motivo });
+    
+        // 1. Construir la entidad
+        const baja = new BajaEstudiante(
+          null,
+          datos.estudianteId,
+          datos.tipo,
+          datos.motivo
+        );
+    
+        // 2. (opcional) aprobar de inmediato
+        baja.aprobar();
+    
+        // 3. Persistir trámite y actualizar estado
+        await this.bd.guardarBajaEstudiante(baja);
       }
 }

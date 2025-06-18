@@ -55,4 +55,20 @@ export class PersonalSecretaria extends Usuario {
                 throw error;
             }
         }
-}
+        public static async darBajaEstudiante(datos: {
+            estudianteId: number
+            tipo: 'BajaTemporal' | 'BajaDefinitiva'
+            motivo: string      // solo para mostrar en consola
+          }) {
+            console.log('[PersonalSecretaria] darBajaEstudiante recibió:', datos)
+            try {
+              await Sistema.getInstancia().darBajaEstudiante(datos)
+            } catch (error) {
+              console.error('Error al dar de baja al estudiante:', error)
+              // Re-lanzamos para que la capa que llama (API, UI…) lo maneje
+              throw error instanceof Error ? error : new Error('Error desconocido en darBajaEstudiante')
+            }
+          }
+        
+    }
+        

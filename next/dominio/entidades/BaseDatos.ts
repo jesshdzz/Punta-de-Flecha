@@ -1,6 +1,7 @@
 import { Estudiante } from "./Estudiante";
 import { Inscripcion } from "./Inscripcion";
 import { Reinscripcion } from "./Reinscripcion";
+import { BajaEstudiante } from "./BajaEstudiante";
 import { Pago } from "./Pago";
 import { Recibo } from "./Recibo";
 import { Tramite } from "./Tramite";
@@ -290,5 +291,41 @@ export class BaseDatos {
             throw new Error("Error desconocido al guardar la reinscripción.");
         }
     }
+    public async guardarBajaEstudiante(baja: BajaEstudiante): Promise<boolean> {
+        try {
+          // 1) Validar que el estudiante exista
+          await this.validarUsuario(baja.getEstudianteId());
+    
+          // 2) Ejecutar todo en una transacción
+          await prisma.$transaction(async (tx) => {
+            // 2.a) Crear el trámite
+            const nuevoTramite = await tx.tramite.create({
+              data: {
+                estudianteId: baja.getEstudianteId(),
+                tipo: baja.getTipo(),
+                estado: baja.getEstado(),
+                fecha: baja.getFecha(),
+              },
+            });
+            baja.setId(nuevoTramite.id);
+    
+            // 2.b) Actualizar el estado del estudiante según el tipo de baja
+            const nuevoEstado = 
+              baja.getTipo() === "BajaTemporal" ? "BajaTemporal" : "BajaDefinitiva";
+    
+            await tx.estudiante.update({
+              where: { usuarioId: baja.getEstudianteId() },
+              data: { estado: nuevoEstado },
+            });
+          });
+    
+          return true;
+        } catch (error) {
+          if (error instanceof Error) {
+            throw new Error("Error al guardar la baja: " + error.message);
+          }
+          throw new Error("Error desconocido al guardar la baja.");
+        }
+      }
     
 }
