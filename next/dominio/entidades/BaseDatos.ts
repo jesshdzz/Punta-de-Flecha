@@ -4,11 +4,16 @@ import { Pago } from "./Pago";
 import { Recibo } from "./Recibo";
 import { Tramite } from "./Tramite";
 import prisma from "@/lib/prisma"
+import { MaterialEducativo } from "./MaterialEducativo";
+import { ServicioNube } from "./ServicioNube";
+import { PrismaClient } from '@prisma/client';
+
 
 export class BaseDatos {
     private static instancia: BaseDatos
 
     constructor() { }
+    
 
     public static getInstancia(): BaseDatos {
         if (!BaseDatos.instancia) {
@@ -44,6 +49,7 @@ export class BaseDatos {
                 estudiante.setGrupo(estu.grupoId!);
                 estudiante.setId(usuario.id);
             })
+
 
             if (!estudiante.getId()) {
                 throw new Error("Error al crear el estudiante.");
@@ -202,7 +208,7 @@ export class BaseDatos {
             throw new Error("El usuario no existe.");
         }
         return true;
-    }
+    } 
 
     public async validarTramite(tramiteId: number): Promise<boolean> {
         const tramite = await prisma.tramite.findUnique({ where: { id: tramiteId } })
@@ -211,4 +217,44 @@ export class BaseDatos {
         }
         return true;
     }
+
+    
+
+   
+    public async guardarMaterial(datosPrisma: any) { // Puedes usar 'Prisma.MaterialEducativoCreateInput' si lo importas
+        try {
+            const materialCreado = await prisma.materialEducativo.create({
+                data: datosPrisma, // <-- Aquí ya tienes el objeto listo para Prisma
+            });
+            console.log("Material guardado en la base de datos.");
+            return materialCreado;
+        } catch (error) {
+            console.error("Error al guardar material en la base de datos (Prisma):", error);
+            throw error;
+        }
+    }
+
+    public async guardarArchivo(data: {
+    nombreArchivo: string,
+    urlNube: string,
+    material: {
+        connect: {
+            id: number
+        }
+    }
+    }): Promise<void> {
+        await prisma.archivoSubido.create({
+            data
+        });
+    }
+   public async actualizarExistenciaMaterial(materialId: number): Promise<void> {
+    await prisma.materialEducativo.update({
+        where: { id: materialId },
+        data: { existencia: true },
+    });
+}
+
+
+
+
 }

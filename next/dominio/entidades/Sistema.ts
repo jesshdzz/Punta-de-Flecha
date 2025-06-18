@@ -5,6 +5,11 @@ import { Inscripcion } from "./Inscripcion";
 import { Pago } from "./Pago";
 import { Recibo } from "./Recibo";
 import { SistemaValidacion } from "./SistemaValidacion";
+import { Profesor } from "./Profesor";
+import { MaterialEducativo } from "./MaterialEducativo";
+import { Usuario } from "./Usuario";
+import { Numerals } from "react-day-picker";
+
 
 export class Sistema {
     private static instancia: Sistema;
@@ -78,4 +83,129 @@ export class Sistema {
             throw new Error("Error desconocido al registrar estudiante.");
         }
     }
+
+   
+  
+    /*public async agregarMaterial(datos:{
+        titulo: string
+        descripcion: string
+        categoria: string
+        }, archivos: { nombreArchivo: string }[], idProfesor: number){
+        try {
+            
+
+            console.log("El Id del profesor es: ", idProfesor); 
+
+            /*const profesorId = material.getProfesorId();
+            console.log("DEBUG: profesorId:", profesorId);
+            if (!profesorId) throw new Error("El MaterialEducativo no tiene un ID de profesor asociado.")*/
+
+            
+
+            //el sistema se va a encargar de validar el material educativo
+            /*this.validador.validarMaterial(datos);
+
+            //asi mismo de la extension de los archivos que llegaron del profesor
+            this.validador.validarExtensionesArchivos(archivos);
+
+            if(archivos.length === 0){
+                throw new Error("Estas mal, en que? en algo.")
+            }
+            const nombreArchivo = archivos[0].nombreArchivo;
+            const extension = nombreArchivo.substring(nombreArchivo.lastIndexOf('.') + 1).toLowerCase();
+
+            //Crear Material Educativo
+             const material = new MaterialEducativo(
+                null,
+                datos.titulo,
+                idProfesor,
+                new Date(),
+                datos.descripcion,
+                datos.categoria,
+                false,
+                extension
+            );
+
+           /* const datosParaPrisma = {
+                titulo: material.getTitulo(),
+                descripcion: material.getDescripcion(),
+                categoria: material.getCategoria(),
+                existencia: material.getExistencia(),
+                tipoArchivo: material.getTipoArchivo(),
+                fecha: material.getFecha(),
+                profesor: {
+                    connect: {
+                        usuarioId: profesorId,
+                    },
+                },
+            };
+
+            const materialGuardado = await this.bd.guardarMaterial(datosParaPrisma);
+
+            if (!materialGuardado || !materialGuardado.id) {
+                throw new Error("Error al guardar el material en la base de datos.");
+            }
+
+            material.setId(materialGuardado.id);
+
+            console.log("Material educativo agregado con ID:", material.getId());
+
+            return materialGuardado.id;*/
+      /*  } catch (error) {
+            console.error("Error en agregarMaterial():", error);
+            throw error;
+        }
+    }
+*/
+
+    public async agregarMaterial(
+             datos: { titulo: string; descripcion: string; categoria: string },
+            archivos: File[],
+            idProfesor: number
+        
+        ): Promise<void> {
+        try {
+           if (!archivos || archivos.length === 0) throw new Error("Debe subir al menos un archivo.");
+
+            this.validador.validarMaterial(datos);
+            this.validador.validarExtensionesArchivos(archivos);
+
+            // Tomamos la extensión del primer archivo para el ejemplo
+            const nombreArchivo = archivos[0].name;
+            const extension = nombreArchivo.substring(nombreArchivo.lastIndexOf('.') + 1).toLowerCase();
+
+
+            // Crear el material
+            const material = new MaterialEducativo(
+                    null,
+                    datos.titulo,
+                    idProfesor,
+                    new Date(),
+                    datos.descripcion,
+                    datos.categoria,
+                    false,
+                    extension
+            );
+
+            // Aquí el MaterialEducativo se encarga de guardar todo
+            await material.agregarMaterial({
+                titulo: datos.titulo,
+                descripcion: datos.descripcion,
+                categoria: datos.categoria,
+                existencia: false,
+                tipoArchivo: extension,
+                fecha: new Date().toISOString(),
+                archivos // simplemente le pasamos el array como está
+            });
+        } catch (error) {
+            console.error("Error en agregarMaterial:", error);
+            throw error;
+    }
+}
+
+
+
+    
+   
+
 }
