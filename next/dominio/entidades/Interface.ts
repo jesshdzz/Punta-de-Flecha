@@ -6,8 +6,8 @@ interface MaterialProfesor {
     existencia: boolean
     tipoArchivo: string
     fecha: string
-    //es necesario tambien poner los archivos
     archivos: File[]
+    grupoId: number
   }): Promise<void>
   modificarMaterial(): boolean
   eliminarMaterial(): boolean

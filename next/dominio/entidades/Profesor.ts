@@ -28,6 +28,7 @@ export class Profesor extends Usuario implements MaterialProfesor {
       descripcion: string
       categoria: string
       archivos: File[]
+      grupoId: number
     }): Promise<void> {
       const idProfesor = this.getId();
       if (!idProfesor) throw new Error("ID del profesor no definido");
@@ -41,7 +42,8 @@ export class Profesor extends Usuario implements MaterialProfesor {
           categoria: datos.categoria,
         },
         datos.archivos,
-        idProfesor
+        idProfesor,
+        datos.grupoId
       );
     }
 

@@ -13,8 +13,10 @@ export class MaterialEducativo implements MaterialProfesor {
         private categoria: string,
         private existencia: boolean,
         private tipoArchivo: string,
+        private grupoId: number,
     ) {
        this.profesorId = profesorId;
+       this.grupoId = grupoId;
     }
 
     public solicitarMaterial(): void {
@@ -37,6 +39,7 @@ export class MaterialEducativo implements MaterialProfesor {
         existencia: boolean
         tipoArchivo: string
         fecha: string
+        grupoId: number
         archivos: File[]
     }): Promise<void> {
     try {
@@ -52,6 +55,8 @@ export class MaterialEducativo implements MaterialProfesor {
             tipoArchivo: datos.tipoArchivo,
             fecha: new Date(datos.fecha),
             profesorId: this.profesorId,
+            grupoId: this.grupoId,
+
         });
 
         if (!materialId) {
