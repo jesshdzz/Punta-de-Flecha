@@ -37,6 +37,7 @@ model Estudiante {
     usuario        Usuario          @relation(fields: [usuarioId], references: [id])
     PadreFamilia   PadreFamilia?    @relation(fields: [padreFamiliaId], references: [usuarioId])
     Calificacion   Calificacion[]
+    Asistencia     Asistencia[]
 }
 
 model Profesor {
@@ -122,22 +123,32 @@ model Materia {
     profesorId   Int
     profesor     Profesor       @relation(fields: [profesorId], references: [usuarioId])
     Calificacion Calificacion[]
+    Asistencia   Asistencia[]
 }
 
 model Calificacion {
-    id            Int        @id @default(autoincrement())
-    estudianteId  Int
-    materiaId     Int
-    parcial1      Float      @default(0.0)
-    asistencia1   Int        @default(0)
-    parcial2      Float      @default(0.0)
-    asistencia2   Int        @default(0)
-    ordinario     Float      @default(0.0)
-    final         Float      @default(0.0)
-    asistenciaFin Int        @default(0)
-    fecha         DateTime   @default(now())
-    estudiante    Estudiante @relation(fields: [estudianteId], references: [usuarioId])
-    materia       Materia    @relation(fields: [materiaId], references: [id])
+    id           Int        @id @default(autoincrement())
+    estudianteId Int
+    materiaId    Int
+    parcial1     Float      @default(0.0)
+    parcial2     Float      @default(0.0)
+    ordinario    Float      @default(0.0)
+    final        Float      @default(0.0)
+    fecha        DateTime   @default(now())
+    estudiante   Estudiante @relation(fields: [estudianteId], references: [usuarioId])
+    materia      Materia    @relation(fields: [materiaId], references: [id])
+}
+
+model Asistencia {
+    id           Int        @id @default(autoincrement())
+    estudianteId Int
+    materiaId    Int
+    parcial1     Int        @default(0)
+    parcial2     Int        @default(0)
+    final        Int        @default(0)
+    fecha        DateTime   @default(now())
+    estudiante   Estudiante @relation(fields: [estudianteId], references: [usuarioId])
+    materia      Materia    @relation(fields: [materiaId], references: [id])
 }
 
 enum RolUsuario {

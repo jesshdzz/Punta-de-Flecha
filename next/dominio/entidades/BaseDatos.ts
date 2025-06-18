@@ -6,8 +6,6 @@ import { BajaEstudiante } from "./BajaEstudiante";
 import { Pago } from "./Pago";
 import { Recibo } from "./Recibo";
 import { Tramite } from "./Tramite";
-import { MaterialEducativo } from "./MaterialEducativo";
-import { ServicioNube } from "./ServicioNube";
 import { Calificacion } from "./Calificacion";
 
 
@@ -251,6 +249,20 @@ export class BaseDatos {
         return calificacion.id;
     }
 
+    public async validarAsistencia(estudianteId: number, materiaId: number): Promise<number> {
+        const asistencia = await prisma.asistencia.findFirst({
+            where: {
+                estudianteId: estudianteId,
+                materiaId: materiaId
+            }
+        });
+
+        if (!asistencia) {
+            return -1;
+        }
+        return asistencia.id;
+    }
+
     public async actualizarDatosEstudiante(datos: {
         estudianteId: number;
         nombre?: string;
@@ -417,12 +429,9 @@ export class BaseDatos {
                     },
                     data: {
                         parcial1: calificacion.parcial1,
-                        asistencia1: calificacion.asistencia1,
                         parcial2: calificacion.parcial2,
-                        asistencia2: calificacion.asistencia2,
                         ordinario: calificacion.ordinario,
                         final: calificacion.final,
-                        asistenciaFin: calificacion.asistenciaFin,
                         fecha: new Date() // Actualizar la fecha al momento de la modificación
                     }
                 });
@@ -439,12 +448,9 @@ export class BaseDatos {
                     estudianteId: calificacion.estudianteId,
                     materiaId: calificacion.materiaId,
                     parcial1: calificacion.parcial1,
-                    asistencia1: calificacion.asistencia1,
                     parcial2: calificacion.parcial2,
-                    asistencia2: calificacion.asistencia2,
                     ordinario: calificacion.ordinario,
                     final: calificacion.final,
-                    asistenciaFin: calificacion.asistenciaFin
                 }
             });
 
@@ -456,6 +462,62 @@ export class BaseDatos {
 
         } catch (error) {
             console.error("Error al registrar calificación:", error);
+            throw error;
+        }
+    }
+
+    public async guardarAsistencia(asistencia: {
+        estudianteId: number,
+        materiaId: number,
+        parcial1: number,
+        parcial2: number,
+        final: number,
+    }): Promise<boolean> {
+        try {
+            // Validar que el estudiante y la materia existan
+            await this.validarUsuario(asistencia.estudianteId);
+            await this.validarMateria(asistencia.materiaId);
+            // Validar si ya existe una asistencia para el estudiante y la materia
+            const asistenciaExistente = await this.validarAsistencia(asistencia.estudianteId, asistencia.materiaId);
+
+            if(asistenciaExistente !== -1) {
+                const asis = await prisma.asistencia.update({
+                    where: {
+                        id: asistenciaExistente
+                    },
+                    data: {
+                        parcial1: asistencia.parcial1,
+                        parcial2: asistencia.parcial2,
+                        final: asistencia.final,
+                        fecha: new Date() // Actualizar la fecha al momento de la modificación
+                    }
+                });
+
+                if (!asis) {
+                    throw new Error("Error al actualizar la asistencia.");
+                }
+                return true;
+            }
+
+            // Guardar la asistencia en la base de datos
+            const asis = await prisma.asistencia.create({
+                data: {
+                    estudianteId: asistencia.estudianteId,
+                    materiaId: asistencia.materiaId,
+                    parcial1: asistencia.parcial1,
+                    parcial2: asistencia.parcial2,
+                    final: asistencia.final,
+                }
+            });
+
+            if (!asis) {
+                throw new Error("Error al registrar la asistencia.");
+            }
+
+            return true;
+
+        } catch (error) {
+            console.error("Error al registrar asistencia:", error);
             throw error;
         }
     }

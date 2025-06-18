@@ -9,16 +9,13 @@ export async function POST(req: NextRequest) {
         const {
             estudianteId,
             materiaId,
-            parcial1,
-            asistencia1,
-            parcial2,
-            asistencia2,
+            calif_p1,
+            calif_r2,
             ordinario,
-            final,
-            asistenciaFin
+            calif_final,
         } = datos
 
-        await Profesor.asignarCalificacion(estudianteId, materiaId, parcial1, asistencia1, parcial2, asistencia2, ordinario, final, asistenciaFin)
+        await Profesor.asignarCalificacion(estudianteId, materiaId, calif_p1, calif_r2, ordinario, calif_final)
         
         return NextResponse.json({ ok: true, mensaje: 'Calificaciones registradas correctamente' })
     } catch (error) {
