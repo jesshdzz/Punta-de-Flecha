@@ -1,27 +1,59 @@
 import { Usuario } from './Usuario'
 import { Sistema } from './Sistema'
-import { MaterialEducativo } from './MaterialEducativo'
-import { ServicioNube } from './ServicioNube'
 
 export class Profesor extends Usuario implements MaterialProfesor {
-  constructor(
-    id: number,
-    nombre: string,
-    correo: string,
-    telefono: string,
-    contrasena: string
-  ) {
-    super(id, nombre, correo, telefono, contrasena, 'Profesor')
-  }
+    private materialId: number[] = []
+    private materiasId: number[] = []
 
-  public asignarCalificacion(estudianteID: number, valor: number): boolean {
-    if (valor >= 0 && valor <= 10) {
-      console.log(`Calificación de ${valor} al estudiante con ID ${estudianteID}`)
-      return true
+    constructor(
+        id: number,
+        nombre: string,
+        correo: string,
+        telefono: string,
+        contrasena: string,
+        materiasId?: number[]
+    ) {
+        super(id, nombre, correo, telefono, contrasena, 'Profesor')
+        if (materiasId) this.materiasId = materiasId
     }
-    return false
-  }
 
+    public static async asignarCalificacion(
+        estudianteID: number,
+        materiaID: number,
+        parcial1: number,
+        parcial2: number,
+        ordinario: number,
+        final: number,
+    ): Promise<void> {
+        const calificacion = {
+            estudianteId: estudianteID,
+            materiaId: materiaID,
+            parcial1: parcial1,
+            parcial2: parcial2,
+            ordinario: ordinario,
+            final: final,
+        }
+        
+        await Sistema.getInstancia().registrarCalificacion(calificacion);
+    }
+
+    public static async asignarAsistencia(
+        estudianteID: number,
+        materiaID: number,
+        parcial1: number,
+        parcial2: number,
+        final: number,
+    ): Promise<void> {
+        const asistencia = {
+            estudianteId: estudianteID,
+            materiaId: materiaID,
+            parcial1: parcial1,
+            parcial2: parcial2,
+            final: final,
+        }
+        
+        await Sistema.getInstancia().registrarAsistencia(asistencia);
+    }
 
   public async agregarMaterial(datos: {
       titulo: string
@@ -45,19 +77,20 @@ export class Profesor extends Usuario implements MaterialProfesor {
         idProfesor,
         datos.grupoId
       );
+
     }
 
-  modificarMaterial(): boolean {
-    console.log("Profesor modificó material.");
-    return true
-  }
+    modificarMaterial(): boolean {
+        console.log("Profesor modificó material.");
+        return true
+    }
 
-  eliminarMaterial(): boolean {
-    console.log("Profesor eliminó material.");
-    return true
-  }
+    eliminarMaterial(): boolean {
+        console.log("Profesor eliminó material.");
+        return true
+    }
 
-  solicitarReporte(): void {
-    console.log("Profesor solicitó un reporte.");
-  }
+    solicitarReporte(): void {
+        console.log("Profesor solicitó un reporte.");
+    }
 }

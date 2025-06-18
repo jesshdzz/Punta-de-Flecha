@@ -5,39 +5,53 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client-js"
-  output   = "../app/generated/prisma"
+    provider = "prisma-client-js"
+    output   = "../app/generated/prisma"
 }
 
 datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
+    provider = "mysql"
+    url      = env("DATABASE_URL")
 }
 
 model Usuario {
-  id            Int         @id @default(autoincrement())
-  nombre        String
-  correo        String      @unique
-  telefono      String
-  contrasena    String
-  puesto        RolUsuario
-  fechaCreacion DateTime    @default(now())
-  Estudiante    Estudiante?
-  Profesor      Profesor?
+    id            Int            @id @default(autoincrement())
+    nombre        String
+    correo        String         @unique
+    telefono      String
+    contrasena    String
+    puesto        RolUsuario
+    fechaCreacion DateTime       @default(now())
+    Estudiante    Estudiante?
+    Profesor      Profesor?
+    PadreFamilia  PadreFamilia[]
 }
 
 model Estudiante {
-  usuarioId Int       @id
-  grupoId   Int?
-  tramites  Tramite[]
-  grupo     Grupo?    @relation(fields: [grupoId], references: [id])
-  usuario   Usuario   @relation(fields: [usuarioId], references: [id])
+    usuarioId      Int              @id
+    grupoId        Int?
+    padreFamiliaId Int?
+    tramites       Tramite[]
+    estado         EstadoEstudiante @default(Activo)
+    grupo          Grupo?           @relation(fields: [grupoId], references: [id])
+    usuario        Usuario          @relation(fields: [usuarioId], references: [id])
+    PadreFamilia   PadreFamilia?    @relation(fields: [padreFamiliaId], references: [usuarioId])
+    Calificacion   Calificacion[]
+    Asistencia     Asistencia[]
 }
 
-model Profesor{
-  usuarioId     Int @id 
-  usuario       Usuario @relation(fields: [usuarioId], references: [id])
-  materiales MaterialEducativo[]
+model Profesor {
+    usuarioId  Int                 @id
+    usuario    Usuario             @relation(fields: [usuarioId], references: [id])
+    materiales MaterialEducativo[]
+    Materia    Materia[]
+}
+
+model PadreFamilia {
+    usuarioId   Int          @id
+    domicilio   String
+    usuario     Usuario      @relation(fields: [usuarioId], references: [id])
+    estudiantes Estudiante[]
 }
 
 model Grupo {
@@ -51,37 +65,37 @@ model Grupo {
 
 
 model Tramite {
-  id           Int           @id @default(autoincrement())
-  estudianteId Int
-  tipo         TipoTramite
-  estado       EstadoTramite
-  fecha        DateTime      @default(now())
-  inscripcion  Inscripcion?
-  Pago         Pago?
-  estudiante   Estudiante    @relation(fields: [estudianteId], references: [usuarioId])
+    id           Int           @id @default(autoincrement())
+    estudianteId Int
+    tipo         TipoTramite
+    estado       EstadoTramite
+    fecha        DateTime      @default(now())
+    inscripcion  Inscripcion?
+    Pago         Pago?
+    estudiante   Estudiante    @relation(fields: [estudianteId], references: [usuarioId])
 }
 
 model Inscripcion {
-  tramiteId Int     @id
-  grupoId   Int
-  tramite   Tramite @relation(fields: [tramiteId], references: [id])
-  grupo     Grupo   @relation(fields: [grupoId], references: [id])
+    tramiteId Int     @id
+    grupoId   Int
+    tramite   Tramite @relation(fields: [tramiteId], references: [id])
+    grupo     Grupo   @relation(fields: [grupoId], references: [id])
 }
 
 model Pago {
-  tramiteId Int      @id
-  concepto  String
-  monto     Float
-  recibos   Recibo[]
-  tramite   Tramite  @relation(fields: [tramiteId], references: [id])
+    tramiteId Int      @id
+    concepto  String
+    monto     Float
+    recibos   Recibo[]
+    tramite   Tramite  @relation(fields: [tramiteId], references: [id])
 }
 
 model Recibo {
-  id     Int      @id @default(autoincrement())
-  pagoId Int
-  monto  Float
-  fecha  DateTime @default(now())
-  pago   Pago     @relation(fields: [pagoId], references: [tramiteId])
+    id     Int      @id @default(autoincrement())
+    pagoId Int
+    monto  Float
+    fecha  DateTime @default(now())
+    pago   Pago     @relation(fields: [pagoId], references: [tramiteId])
 }
 
 
@@ -99,34 +113,72 @@ model MaterialEducativo{
   grupo       Grupo     @relation(fields: [grupoId], references: [id])  
   archivo     ArchivoSubido[]
 
+model ArchivoSubido {
+    id            Int               @id @default(autoincrement())
+    materialId    Int
+    nombreArchivo String
+    urlNube       String
+    material      MaterialEducativo @relation(fields: [materialId], references: [id])
 }
 
+model Materia {
+    id           Int            @id @default(autoincrement())
+    nombre       String
+    profesorId   Int
+    profesor     Profesor       @relation(fields: [profesorId], references: [usuarioId])
+    Calificacion Calificacion[]
+    Asistencia   Asistencia[]
+}
 
-model ArchivoSubido {
-  id            Int               @id @default(autoincrement())
-  materialId    Int
-  nombreArchivo String
-  urlNube       String
-  material      MaterialEducativo @relation(fields: [materialId], references: [id])
+model Calificacion {
+    id           Int        @id @default(autoincrement())
+    estudianteId Int
+    materiaId    Int
+    parcial1     Float      @default(0.0)
+    parcial2     Float      @default(0.0)
+    ordinario    Float      @default(0.0)
+    final        Float      @default(0.0)
+    fecha        DateTime   @default(now())
+    estudiante   Estudiante @relation(fields: [estudianteId], references: [usuarioId])
+    materia      Materia    @relation(fields: [materiaId], references: [id])
+}
+
+model Asistencia {
+    id           Int        @id @default(autoincrement())
+    estudianteId Int
+    materiaId    Int
+    parcial1     Int        @default(0)
+    parcial2     Int        @default(0)
+    final        Int        @default(0)
+    fecha        DateTime   @default(now())
+    estudiante   Estudiante @relation(fields: [estudianteId], references: [usuarioId])
+    materia      Materia    @relation(fields: [materiaId], references: [id])
 }
 
 enum RolUsuario {
-  Administrador
-  Profesor
-  Estudiante
-  Padre_familia
-  Secretaria
+    Administrador
+    Profesor
+    Estudiante
+    Padre_familia
+    Secretaria
 }
 
 enum EstadoTramite {
-  Aceptado
-  Pendiente
-  Rechazado
+    Aceptado
+    Pendiente
+    Rechazado
 }
 
 enum TipoTramite {
-  Inscripcion
-  Reinscripcion
-  Baja
-  Pago
+    Inscripcion
+    Reinscripcion
+    BajaTemporal
+    BajaDefinitiva
+    Pago
+}
+
+enum EstadoEstudiante {
+    Activo
+    BajaTemporal
+    BajaDefinitiva
 }
