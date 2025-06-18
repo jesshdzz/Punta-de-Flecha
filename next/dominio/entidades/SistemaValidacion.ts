@@ -1,5 +1,4 @@
 import { Documento } from "./Documento";
-import { MaterialEducativo } from "./MaterialEducativo";
 
 export class SistemaValidacion {
     private static instance: SistemaValidacion;
@@ -187,14 +186,11 @@ export class SistemaValidacion {
         estudianteId: number;
         materiaId: number;
         parcial1: number;
-        asistencia1: number; // opcional
         parcial2: number;
-        asistencia2: number; // opcional
-        ordinario: number;
+        ordinario?: number;
         final: number;
-        asistenciaFin: number;
     }): boolean {
-        const { estudianteId, materiaId, parcial1, asistencia1, parcial2, asistencia2, ordinario, final, asistenciaFin } = calificacion;
+        const { estudianteId, materiaId, parcial1, parcial2, ordinario, final } = calificacion;
 
         if (estudianteId <= 0) {
             throw new Error("El ID del estudiante debe ser un número positivo.");
@@ -212,24 +208,12 @@ export class SistemaValidacion {
             throw new Error("La calificación del segundo parcial debe estar entre 0 y 10.");
         }
 
-        if (ordinario < 0 || ordinario > 10) {
+        if (ordinario && (ordinario < 0 || ordinario > 10)) {
             throw new Error("La calificación del examen ordinario debe estar entre 0 y 10.");
         }
 
         if (final < 0 || final > 10) {
             throw new Error("La calificación del examen final debe estar entre 0 y 10.");
-        }
-
-        if (asistenciaFin < 0 || asistenciaFin > 10) {
-            throw new Error("La asistencia final debe estar entre 0 y 10.");
-        }
-
-        if (asistencia1 < 0 || asistencia1 > 10) {
-            throw new Error("La asistencia del primer parcial debe estar entre 0 y 10.");
-        }
-
-        if (asistencia2 < 0 || asistencia2 > 10) {
-            throw new Error("La asistencia del segundo parcial debe estar entre 0 y 10.");
         }
 
         return true

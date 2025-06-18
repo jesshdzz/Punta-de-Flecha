@@ -9,6 +9,7 @@ import { Recibo } from "./Recibo";
 import { SistemaValidacion } from "./SistemaValidacion";
 import { MaterialEducativo } from "./MaterialEducativo";
 import { Calificacion } from "./Calificacion";
+import { Asistencia } from "./Asistencia";
 
 export class Sistema {
     private static instancia: Sistema;
@@ -223,12 +224,9 @@ export class Sistema {
         estudianteId: number,
         materiaId: number,
         parcial1: number,
-        asistencia1: number,
         parcial2: number,
-        asistencia2: number,
         ordinario: number,
         final: number,
-        asistenciaFin: number
     }): Promise<void> {
         try {
             // Validar calificación
@@ -239,23 +237,50 @@ export class Sistema {
                 calificacion.estudianteId,
                 calificacion.materiaId,
                 calificacion.parcial1,
-                calificacion.asistencia1,
                 calificacion.parcial2,
-                calificacion.asistencia2,
                 calificacion.ordinario,
                 calificacion.final,
-                calificacion.asistenciaFin
             );
 
             // Guardar la calificación en la base de datos
             await this.bd.guardarCalificacion(nuevaCalificacion);
-
         } catch (error) {
             if (error instanceof Error) {
                 throw error;
             }
 
             throw new Error("Error al registrar calificación. Intente mas tarde.");
+        }
+    }
+
+    public async registrarAsistencia(asistencia: {
+        estudianteId: number,
+        materiaId: number,
+        parcial1: number,
+        parcial2: number,
+        final: number,
+    }): Promise<void> {
+        try {
+            // Validar asistencia
+            this.validador.validarCalificacion(asistencia);
+
+            // Crear la asistencia
+            const nuevaAsistencia = new Asistencia(
+                asistencia.estudianteId,
+                asistencia.materiaId,
+                asistencia.parcial1,
+                asistencia.parcial2,
+                asistencia.final
+            );
+
+            // Guardar asistencia en la base de datos
+            await this.bd.guardarAsistencia(nuevaAsistencia);
+        } catch (error) {
+            if (error instanceof Error) {
+                throw error;
+            }
+
+            throw new Error("Error al registrar asistencia. Intente mas tarde.");
         }
     }
 }

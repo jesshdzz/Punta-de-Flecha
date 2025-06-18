@@ -25,7 +25,7 @@ export default function SubirCalificacionPage() {
     setCargando(true)
 
     try {
-      const res = await fetch('/api/calificaciones/subir', {
+      const res = await fetch('/api/calificaciones', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -34,7 +34,6 @@ export default function SubirCalificacionPage() {
           parcial1: parseFloat(formulario.parcial1),
           parcial2: parseFloat(formulario.parcial2),
           examenFinal: parseFloat(formulario.examenFinal),
-          asistencias: parseInt(formulario.asistencias)
         })
       })
 

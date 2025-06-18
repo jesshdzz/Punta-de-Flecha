@@ -21,27 +21,39 @@ export class Profesor extends Usuario implements MaterialProfesor {
         estudianteID: number,
         materiaID: number,
         parcial1: number,
-        asistencia1: number,
         parcial2: number,
-        asistencia2: number,
         ordinario: number,
         final: number,
-        asistenciaFin: number
     ): Promise<void> {
         const calificacion = {
             estudianteId: estudianteID,
             materiaId: materiaID,
             parcial1: parcial1,
-            asistencia1: asistencia1,
             parcial2: parcial2,
-            asistencia2: asistencia2,
             ordinario: ordinario,
             final: final,
-            asistencia: asistenciaFin
         }
+        
         await Sistema.getInstancia().registrarCalificacion(calificacion);
     }
 
+    public static async asignarAsistencia(
+        estudianteID: number,
+        materiaID: number,
+        parcial1: number,
+        parcial2: number,
+        final: number,
+    ): Promise<void> {
+        const asistencia = {
+            estudianteId: estudianteID,
+            materiaId: materiaID,
+            parcial1: parcial1,
+            parcial2: parcial2,
+            final: final,
+        }
+        
+        await Sistema.getInstancia().registrarAsistencia(asistencia);
+    }
 
     public async agregarMaterial(datos: {
         titulo: string
