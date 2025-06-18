@@ -1,0 +1,10 @@
+	curl -X POST http://localhost:3000/api/agregarMaterial   -H "Content-Type: application/json"   -d '{
+	     "profesorId": 1,
+	       "titulo": "Fundamentos",
+	       "descripcion": "Material teórico de la primera unidad.",
+	       "categoria" : "Matemáticas",
+	       "archivos": [
+		 { "nombreArchivo": "unidad1_sistemas_operativos.pdf" },
+		 { "nombreArchivo": "practicas_intro.pdf" }
+	       ]
+	       }'

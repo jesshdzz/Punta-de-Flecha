@@ -100,54 +100,50 @@ export class SistemaValidacion {
 
 
     //Validar Material Educativo
-    public validarMaterial(material: MaterialEducativo): void {
-        if (!material.getTitulo() || material.getTitulo().trim().length < 5){
-            throw new Error("El título del material es inválido.");
+    public validarMaterial(datos: {
+        titulo: string;
+        descripcion: string;
+        categoria: string;
+        }): void {
+        const { titulo, descripcion, categoria } = datos;
+
+        // Validar que existan
+        if (!titulo || titulo.trim() === '') {
+            throw new Error("El título del material es obligatorio.");
         }
 
-        if (!material.getDescripcion() || material.getDescripcion().trim().length < 10){
+        if (!descripcion || descripcion.trim() === '') {
+            throw new Error("La descripción del material es obligatoria.");
+        }
+
+        if (!categoria || categoria.trim() === '') {
+            throw new Error("La categoría del material es obligatoria.");
+        }
+
+        if (titulo.length < 5) {
+            throw new Error("El título debe tener al menos 5 caracteres.");
+        }
+
+        if (descripcion.length < 10) {
             throw new Error("La descripción debe tener al menos 10 caracteres.");
         }
 
-        if(!material.getCategoria()){
-            throw new Error("Debe especificarse una categoría.");
+        const categoriasPermitidas = ['Matemáticas', 'Lenguaje', 'Ciencias', 'Historia', 'Otro'];
+        if (!categoriasPermitidas.includes(categoria)) {
+            throw new Error(`Categoría no válida. Las opciones válidas son: ${categoriasPermitidas.join(', ')}`);
         }
 
-        if (!(material.getFecha() instanceof Date)) {
-            throw new Error("La fecha es inválida.");
+        console.log("Validación de material educativa exitosa.");
         }
 
-        if(typeof material.getExistencia() !== 'boolean'){
-            throw new Error("El campo 'existencia' debe ser booleano.");
-        }
-        const tiposPermitidos = ['pdf', 'docx', 'pptx', 'mp4'];
-
-        if (!tiposPermitidos.includes(material.getTipoArchivo().toLowerCase())) {
-            throw new Error("Tipo de archivo no permitido.");
-        }
-
-        console.log("Material educativo validado correctamente."); // Solo para prueba
-    
+    public validarExtensionesArchivos(archivos: File[]) {
+        const extensionesPermitidas = ['pdf', 'docx', 'pptx', 'jpg', 'png', 'mp4']; // ejemplo
+        for (const archivo of archivos) {
+        const extension = archivo.name.substring(archivo.name.lastIndexOf('.') + 1).toLowerCase();
+        if (!extensionesPermitidas.includes(extension)) {
+            throw new Error(`Archivo no permitido: ${archivo.name} (extensión .${extension})`);
+      }
     }
-    public validarExtensionesArchivos(archivos: { nombreArchivo: string }[]): void {
-    const tiposPermitidos = ['pdf', 'docx', 'pptx', 'mp4'];
-
-    for (const archivo of archivos) {
-        const nombre = archivo.nombreArchivo;
-        const extension = nombre.includes('.') 
-            ? nombre.substring(nombre.lastIndexOf('.') + 1).toLowerCase()
-            : '';
-
-        if (!extension) {
-            throw new Error(`El archivo '${nombre}' no tiene extensión.`);
-        }
-
-        if (!tiposPermitidos.includes(extension)) {
-            throw new Error(`La extensión '${extension}' del archivo '${nombre}' no está permitida.`);
-        }
-    }
-
-    console.log("Todas las extensiones de archivos son válidas.");
-}
+  }
 
 }

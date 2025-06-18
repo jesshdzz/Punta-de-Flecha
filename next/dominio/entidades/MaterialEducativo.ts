@@ -1,3 +1,7 @@
+import { ServicioNube } from "./ServicioNube";
+import { BaseDatos } from "./BaseDatos";
+import { Sistema } from "./Sistema";
+
 export class MaterialEducativo implements MaterialProfesor {
     
     constructor(
@@ -10,7 +14,7 @@ export class MaterialEducativo implements MaterialProfesor {
         private existencia: boolean,
         private tipoArchivo: string,
     ) {
-       // this.fecha = new Date(); // fecha automática cuando se crea
+       this.profesorId = profesorId;
     }
 
     public solicitarMaterial(): void {
@@ -32,11 +36,70 @@ export class MaterialEducativo implements MaterialProfesor {
         categoria: string
         existencia: boolean
         tipoArchivo: string
-       
+        fecha: string
+        archivos: File[]
     }): Promise<void> {
-        console.log("MaterialEducativo intenta agregarse a sí mismo (simulado):", datos.titulo);
-       
-        return Promise.resolve();
+    try {
+        const bd = BaseDatos.getInstancia();
+        const servicioNube = ServicioNube.getInstancia();
+
+        // Guardar material en la BD primero
+        const materialId = await bd.guardarMaterial({
+            titulo: datos.titulo,
+            descripcion: datos.descripcion,
+            categoria: datos.categoria,
+            existencia: datos.existencia,
+            tipoArchivo: datos.tipoArchivo,
+            fecha: new Date(datos.fecha),
+            profesorId: this.profesorId,
+        });
+
+        if (!materialId) {
+            throw new Error("No se pudo guardar el material en la base de datos.");
+        }
+
+        this.setId(materialId.id);
+
+      
+        const archivosSubidos = datos.archivos.map((archivo) => {
+            const extension = archivo.name.substring(archivo.name.lastIndexOf('.') + 1).toLowerCase();
+
+            return {
+                nombreArchivo: archivo.name,
+                urlNube: servicioNube.generarUrlSimulada(
+                    materialId.id,
+                    datos.titulo,
+                    extension
+                ),
+            };
+        });
+
+        for (const archivo of archivosSubidos) {
+            await bd.guardarArchivo({
+                nombreArchivo: archivo.nombreArchivo,
+                urlNube: archivo.urlNube,
+                material: {
+                    connect: {
+                        id: materialId.id,
+                    },
+                },
+            });
+        }
+
+        // Actualizar existencia a true después de guardar archivos
+        await bd.actualizarExistenciaMaterial(materialId.id);
+        this.existencia = true;
+
+        console.log("Material y archivos guardados correctamente.");
+    } catch (error) {
+        console.error("Error en MaterialEducativo.agregarMaterial:", error);
+        throw error;
+    }
+}
+
+
+    public setId(id: number): void {
+        this.id = id;
     }
 
     public modificarMaterial(): boolean {
@@ -49,7 +112,7 @@ export class MaterialEducativo implements MaterialProfesor {
         return true;
     }
 
-    public solicitarReporte(): void {
+    public solicitarReporte(): void {   
         console.log("Reporte de material solicitado");
     }
 
@@ -84,8 +147,5 @@ export class MaterialEducativo implements MaterialProfesor {
 
     public getTipoArchivo(): string {
         return this.tipoArchivo;
-    }
-    public setId(id: number): void {
-        this.id = id;
     }
 }
