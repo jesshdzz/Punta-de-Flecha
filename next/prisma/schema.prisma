@@ -55,12 +55,14 @@ model PadreFamilia {
 }
 
 model Grupo {
-    id            Int           @id @default(autoincrement())
-    nombre        String
-    grado         Int
-    estudiantes   Estudiante[]
-    inscripciones Inscripcion[]
+  id            Int                 @id @default(autoincrement())
+  nombre        String
+  grado         Int
+  estudiantes   Estudiante[]
+  inscripciones Inscripcion[]
+  materiales    MaterialEducativo[]
 }
+
 
 model Tramite {
     id           Int           @id @default(autoincrement())
@@ -96,18 +98,20 @@ model Recibo {
     pago   Pago     @relation(fields: [pagoId], references: [tramiteId])
 }
 
-model MaterialEducativo {
-    id          Int             @id @default(autoincrement())
-    titulo      String
-    descripcion String
-    categoria   String
-    existencia  Boolean         @default(false)
-    fecha       DateTime        @default(now())
-    tipoArchivo String
-    profesorId  Int
-    profesor    Profesor        @relation(fields: [profesorId], references: [usuarioId])
-    archivo     ArchivoSubido[]
-}
+
+model MaterialEducativo{
+  id          Int  @id @default(autoincrement())
+  titulo      String
+  descripcion String
+  categoria   String
+  existencia  Boolean  @default(false)
+  fecha       DateTime @default(now())
+  tipoArchivo String
+  profesorId  Int
+  grupoId     Int
+  profesor    Profesor @relation(fields: [profesorId], references: [usuarioId])
+  grupo       Grupo     @relation(fields: [grupoId], references: [id])  
+  archivo     ArchivoSubido[]
 
 model ArchivoSubido {
     id            Int               @id @default(autoincrement())

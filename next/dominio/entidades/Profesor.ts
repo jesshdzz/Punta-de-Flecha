@@ -55,26 +55,29 @@ export class Profesor extends Usuario implements MaterialProfesor {
         await Sistema.getInstancia().registrarAsistencia(asistencia);
     }
 
-    public async agregarMaterial(datos: {
-        titulo: string
-        descripcion: string
-        categoria: string
-        archivos: File[]
+  public async agregarMaterial(datos: {
+      titulo: string
+      descripcion: string
+      categoria: string
+      archivos: File[]
+      grupoId: number
     }): Promise<void> {
-        const idProfesor = this.getId();
-        if (!idProfesor) throw new Error("ID del profesor no definido");
-        if (!datos.archivos || datos.archivos.length === 0) throw new Error("Debe subir al menos un archivo.");
+      const idProfesor = this.getId();
+      if (!idProfesor) throw new Error("ID del profesor no definido");
+      if (!datos.archivos || datos.archivos.length === 0) throw new Error("Debe subir al menos un archivo.");
 
-        // Pasar archivos File[] reales al sistema
-        await Sistema.getInstancia().agregarMaterial(
-            {
-                titulo: datos.titulo,
-                descripcion: datos.descripcion,
-                categoria: datos.categoria,
-            },
-            datos.archivos,
-            idProfesor
-        );
+      // Pasar archivos File[] reales al sistema
+      await Sistema.getInstancia().agregarMaterial(
+        {
+          titulo: datos.titulo,
+          descripcion: datos.descripcion,
+          categoria: datos.categoria,
+        },
+        datos.archivos,
+        idProfesor,
+        datos.grupoId
+      );
+
     }
 
     modificarMaterial(): boolean {

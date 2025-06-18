@@ -88,6 +88,121 @@ export class Sistema {
         }
     }
 
+    public async agregarMaterial(
+             datos: { titulo: string; descripcion: string; categoria: string },
+            archivos: File[],
+            idProfesor: number,
+              grupoId: number
+        
+        ): Promise<void> {
+        try {
+            if (!archivos || archivos.length === 0) throw new Error("Debe subir al menos un archivo.");
+
+            this.validador.validarMaterial(datos);
+            this.validador.validarExtensionesArchivos(archivos);
+            const datosGrupo = await this.bd.obtenerDatosGrupoPorId(grupoId);
+            if (!datosGrupo) {
+            throw new Error("El grupo especificado no existe.");
+            }
+            // Tomamos la extensión del primer archivo para el ejemplo
+            const nombreArchivo = archivos[0].name;
+            const extension = nombreArchivo.substring(nombreArchivo.lastIndexOf('.') + 1).toLowerCase();
+
+
+            // Crear el material
+            const material = new MaterialEducativo(
+                    null,
+                    datos.titulo,
+                    idProfesor,
+                    new Date(),
+                    datos.descripcion,
+                    datos.categoria,
+                    false,
+                    extension,
+                    grupoId
+            );
+
+            // Aquí el MaterialEducativo se encarga de guardar todo
+            await material.agregarMaterial({
+                titulo: datos.titulo,
+                descripcion: datos.descripcion,
+                categoria: datos.categoria,
+                existencia: false,
+                tipoArchivo: extension,
+                fecha: new Date().toISOString(),
+                archivos,
+                grupoId
+            });
+        } catch (error) {
+            console.error("Error en agregarMaterial:", error);
+            throw error;
+        }
+    }
+
+    public async registrarCalificacion(calificacion: {
+        estudianteId: number,
+        materiaId: number,
+        parcial1: number,
+        parcial2: number,
+        ordinario: number,
+        final: number,
+    }): Promise<void> {
+        try {
+            // Validar calificación
+            this.validador.validarCalificacion(calificacion);
+
+            // Crear la calificación
+            const nuevaCalificacion = new Calificacion(
+                calificacion.estudianteId,
+                calificacion.materiaId,
+                calificacion.parcial1,
+                calificacion.parcial2,
+                calificacion.ordinario,
+                calificacion.final,
+            );
+
+            // Guardar la calificación en la base de datos
+            await this.bd.guardarCalificacion(nuevaCalificacion);
+        } catch (error) {
+            if (error instanceof Error) {
+                throw error;
+            }
+
+            throw new Error("Error al registrar calificación. Intente mas tarde.");
+        }
+    }
+
+    public async registrarAsistencia(asistencia: {
+        estudianteId: number,
+        materiaId: number,
+        parcial1: number,
+        parcial2: number,
+        final: number,
+    }): Promise<void> {
+        try {
+            // Validar asistencia
+            this.validador.validarCalificacion(asistencia);
+
+            // Crear la asistencia
+            const nuevaAsistencia = new Asistencia(
+                asistencia.estudianteId,
+                asistencia.materiaId,
+                asistencia.parcial1,
+                asistencia.parcial2,
+                asistencia.final
+            );
+
+            // Guardar asistencia en la base de datos
+            await this.bd.guardarAsistencia(nuevaAsistencia);
+        } catch (error) {
+            if (error instanceof Error) {
+                throw error;
+            }
+
+            throw new Error("Error al registrar asistencia. Intente mas tarde.");
+        }
+    }
+    
     public async actualizarDatosEstudiante(datos: {
         estudianteId: number;
         nombre?: string;
@@ -173,114 +288,5 @@ export class Sistema {
 
         // 3. Persistir trámite y actualizar estado
         await this.bd.guardarBajaEstudiante(baja);
-    }
-
-    public async agregarMaterial(
-        datos: { titulo: string; descripcion: string; categoria: string },
-        archivos: File[],
-        idProfesor: number
-
-    ): Promise<void> {
-        try {
-            if (!archivos || archivos.length === 0) throw new Error("Debe subir al menos un archivo.");
-
-            this.validador.validarMaterial(datos);
-            this.validador.validarExtensionesArchivos(archivos);
-
-            // Tomamos la extensión del primer archivo para el ejemplo
-            const nombreArchivo = archivos[0].name;
-            const extension = nombreArchivo.substring(nombreArchivo.lastIndexOf('.') + 1).toLowerCase();
-
-
-            // Crear el material
-            const material = new MaterialEducativo(
-                null,
-                datos.titulo,
-                idProfesor,
-                new Date(),
-                datos.descripcion,
-                datos.categoria,
-                false,
-                extension
-            );
-
-            // Aquí el MaterialEducativo se encarga de guardar todo
-            await material.agregarMaterial({
-                titulo: datos.titulo,
-                descripcion: datos.descripcion,
-                categoria: datos.categoria,
-                existencia: false,
-                tipoArchivo: extension,
-                fecha: new Date().toISOString(),
-                archivos // simplemente le pasamos el array como está
-            });
-        } catch (error) {
-            console.error("Error en agregarMaterial:", error);
-            throw error;
-        }
-    }
-
-    public async registrarCalificacion(calificacion: {
-        estudianteId: number,
-        materiaId: number,
-        parcial1: number,
-        parcial2: number,
-        ordinario: number,
-        final: number,
-    }): Promise<void> {
-        try {
-            // Validar calificación
-            this.validador.validarCalificacion(calificacion);
-
-            // Crear la calificación
-            const nuevaCalificacion = new Calificacion(
-                calificacion.estudianteId,
-                calificacion.materiaId,
-                calificacion.parcial1,
-                calificacion.parcial2,
-                calificacion.ordinario,
-                calificacion.final,
-            );
-
-            // Guardar la calificación en la base de datos
-            await this.bd.guardarCalificacion(nuevaCalificacion);
-        } catch (error) {
-            if (error instanceof Error) {
-                throw error;
-            }
-
-            throw new Error("Error al registrar calificación. Intente mas tarde.");
-        }
-    }
-
-    public async registrarAsistencia(asistencia: {
-        estudianteId: number,
-        materiaId: number,
-        parcial1: number,
-        parcial2: number,
-        final: number,
-    }): Promise<void> {
-        try {
-            // Validar asistencia
-            this.validador.validarCalificacion(asistencia);
-
-            // Crear la asistencia
-            const nuevaAsistencia = new Asistencia(
-                asistencia.estudianteId,
-                asistencia.materiaId,
-                asistencia.parcial1,
-                asistencia.parcial2,
-                asistencia.final
-            );
-
-            // Guardar asistencia en la base de datos
-            await this.bd.guardarAsistencia(nuevaAsistencia);
-        } catch (error) {
-            if (error instanceof Error) {
-                throw error;
-            }
-
-            throw new Error("Error al registrar asistencia. Intente mas tarde.");
-        }
     }
 }

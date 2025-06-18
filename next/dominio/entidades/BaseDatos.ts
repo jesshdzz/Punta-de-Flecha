@@ -406,13 +406,26 @@ export class BaseDatos {
             data
         });
     }
-
-    public async actualizarExistenciaMaterial(materialId: number): Promise<void> {
+  
+   public async actualizarExistenciaMaterial(materialId: number): Promise<void> {
         await prisma.materialEducativo.update({
             where: { id: materialId },
             data: { existencia: true },
         });
     }
+
+   
+    public async obtenerDatosGrupoPorId(grupoId: number): Promise<{ id: number, nombre: string, grado: number } | null> {
+        const grupoBD = await prisma.grupo.findUnique({ where: { id: grupoId } });
+        if (!grupoBD) return null;
+        return {
+            id: grupoBD.id,
+            nombre: grupoBD.nombre,
+            grado: grupoBD.grado
+        };
+    }
+}
+
 
     public async guardarCalificacion(calificacion: Calificacion): Promise<boolean> {
         try {
@@ -522,3 +535,4 @@ export class BaseDatos {
         }
     }
 }
+
