@@ -2,21 +2,32 @@
 
 import { AuthGuard } from "@/components/auth-guard"
 import { useState, useEffect } from "react"
-import { TrendingUp, BookOpen, Bell, LogOut, Download, Eye, FileText, Video, Presentation } from "lucide-react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Separator } from "@/components/ui/separator"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import {
+  TrendingUp,
+  BookOpen,
+  Bell,
+  LogOut,
+  Download,
+  Eye,
+  FileText,
+  Video,
+  Presentation,
+  GraduationCap,
+  Calendar,
+  ExternalLink,
+} from "lucide-react"
 import { BaseDatos } from "@/lib/database"
 import { SistemaAutenticacion } from "@/lib/auth"
 import type { Calificacion, MaterialEducativo, Materia } from "@/types"
 import { useRouter } from "next/navigation"
-
-// Componentes UI importados
-import {
-  Card, CardHeader, CardTitle, CardContent
-} from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import {
-  Table, TableHeader, TableHead, TableBody, TableRow, TableCell
-} from "@/components/ui/table"
+import { FileStorage } from "@/lib/file-storage"
 
 function EstudianteDashboardContent() {
   const [calificaciones, setCalificaciones] = useState<Calificacion[]>([])
@@ -33,17 +44,29 @@ function EstudianteDashboardContent() {
 
   useEffect(() => {
     const db = BaseDatos.getInstance()
-    const estudianteId = "est1" // simulado
-    const califs = db.obtenerCalificacionesPorEstudiante(estudianteId)
-    setCalificaciones(califs)
-    if (califs.length > 0) {
-      const suma = califs.reduce((acc, c) => acc + c.valor, 0)
-      setPromedioGeneral(suma / califs.length)
+
+    // Simular que el usuario actual es un estudiante
+    const estudianteId = "est1" // En un sistema real, esto vendría del usuario autenticado
+
+    // Obtener calificaciones del estudiante
+    const calificacionesEstudiante = db.obtenerCalificacionesPorEstudiante(estudianteId)
+    setCalificaciones(calificacionesEstudiante)
+
+    // Calcular promedio
+    if (calificacionesEstudiante.length > 0) {
+      const suma = calificacionesEstudiante.reduce((acc, cal) => acc + cal.valor, 0)
+      setPromedioGeneral(suma / calificacionesEstudiante.length)
     }
+
+    // Obtener materiales educativos
     setMateriales(db.obtenerMaterialesEducativos())
-    const mMap = new Map<string, Materia>()
-    db.obtenerMaterias().forEach(m => mMap.set(m.id, m))
-    setMaterias(mMap)
+
+    // Crear mapa de materias
+    const materiasMap = new Map()
+    db.obtenerMaterias().forEach((mat) => {
+      materiasMap.set(mat.id, mat)
+    })
+    setMaterias(materiasMap)
   }, [])
 
   const handleLogout = () => {
@@ -51,38 +74,81 @@ function EstudianteDashboardContent() {
     router.push("/login")
   }
 
-  const variantCalif = (valor: number) => {
-    if (valor >= 9) return "default"
-    if (valor >= 7) return "secondary"
-    if (valor >= 6) return "destructive"
-    return "outline"
+  const getColorCalificacion = (valor: number) => {
+    if (valor >= 9) return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+    if (valor >= 7) return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+    if (valor >= 6) return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+    return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
   }
 
-  const iconoTipo = (tipo: string) => {
+  const getIconoTipo = (tipo: string) => {
     switch (tipo) {
-      case "libro": return <BookOpen size={16} />
-      case "documento": return <FileText size={16} />
-      case "video": return <Video size={16} />
-      case "presentacion": return <Presentation size={16} />
-      default: return <FileText size={16} />
+      case "libro":
+        return <BookOpen className="h-4 w-4" />
+      case "documento":
+        return <FileText className="h-4 w-4" />
+      case "video":
+        return <Video className="h-4 w-4" />
+      case "presentacion":
+        return <Presentation className="h-4 w-4" />
+      default:
+        return <FileText className="h-4 w-4" />
     }
   }
 
-  const variantTipo = (tipo: string) => {
+  const getColorTipo = (tipo: string) => {
     switch (tipo) {
-      case "libro": return "primary"
-      case "documento": return "success"
-      case "video": return "destructive"
-      case "presentacion": return "secondary"
-      default: return "default"
+      case "libro":
+        return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+      case "documento":
+        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+      case "video":
+        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+      case "presentacion":
+        return "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200"
+      default:
+        return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200"
     }
   }
 
-  const fmtPeriodo = (p: string) =>
-    p.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase())
+  const formatearPeriodo = (periodo: string) => {
+    return periodo.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())
+  }
 
-  const fmtFecha = (f: Date) =>
-    f.toLocaleDateString("es-ES")
+  const formatearFecha = (fecha: Date) => {
+    return fecha.toLocaleDateString("es-ES")
+  }
+
+  const handlePrevisualizarMaterial = (materialId: string) => {
+    if (FileStorage.previsualizarArchivo(materialId)) {
+      console.log("Material previsualizado exitosamente")
+    } else {
+      alert("Error al previsualizar el material")
+    }
+  }
+
+  const handleDescargarMaterial = (materialId: string) => {
+    if (FileStorage.descargarArchivo(materialId)) {
+      console.log("Material descargado exitosamente")
+    } else {
+      alert("Error al descargar el material")
+    }
+  }
+
+  const handleVerVideo = (url: string) => {
+    window.open(url, "_blank")
+  }
+
+  const handleCopiarURL = (url: string) => {
+    navigator.clipboard
+      .writeText(url)
+      .then(() => {
+        alert("URL del video copiada al portapapeles")
+      })
+      .catch(() => {
+        alert(`URL del video: ${url}`)
+      })
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 dark:from-gray-900 dark:to-purple-900/30 p-6">
@@ -100,100 +166,114 @@ function EstudianteDashboardContent() {
         </div>
 
         {/* Notificaciones */}
-        {notificaciones.some(n => !n.leida) && (
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle>
-                <Bell size={20} className="inline mr-2" />
-                Notificaciones ({notificaciones.filter(n => !n.leida).length})
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {notificaciones.filter(n => !n.leida).map(n => (
-                <div key={n.id} className="p-4 bg-white dark:bg-gray-800 rounded shadow-sm">
-                  <p className="font-medium">{n.mensaje}</p>
-                  <p className="text-sm text-gray-500">{fmtFecha(n.fecha)}</p>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+        {notificaciones.filter((n) => !n.leida).length > 0 && (
+          <Alert className="mb-6 border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950">
+            <Bell className="h-4 w-4" />
+            <AlertDescription>
+              <div className="flex justify-between items-center">
+                <span className="font-medium">
+                  Tienes {notificaciones.filter((n) => !n.leida).length} notificaciones nuevas
+                </span>
+                <Button variant="ghost" size="sm">
+                  Ver todas
+                </Button>
+              </div>
+            </AlertDescription>
+          </Alert>
         )}
 
-        {/* Estadísticas */}
+        {/* Estadísticas principales */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          {[{
-            title: "Mi Promedio",
-            icon: <TrendingUp size={32} className="text-success mx-auto mb-2" />,
-            value: promedioGeneral.toFixed(1),
-            badge: promedioGeneral >= 6 ? "Aprobado" : "Necesita Mejorar",
-            variant: variantCalif(promedioGeneral)
-          },{
-            title: "Material Disponible",
-            icon: <BookOpen size={32} className="text-secondary mx-auto mb-2" />,
-            value: materiales.length.toString(),
-            badge: "Recursos educativos",
-            variant: "secondary"
-          },{
-            title: "Calificaciones",
-            icon: <FileText size={32} className="text-primary mx-auto mb-2" />,
-            value: calificaciones.length.toString(),
-            badge: "Registradas",
-            variant: "primary"
-          }].map((s, i) => (
-            <Card key={i}>
-              <CardHeader><CardTitle>{s.title}</CardTitle></CardHeader>
-              <CardContent className="text-center">
-                {s.icon}
-                <p className="text-4xl font-bold">{s.value}</p>
-                <Badge variant={s.variant} className="mt-2">{s.badge}</Badge>
-              </CardContent>
-            </Card>
-          ))}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium dark:text-white">Mi Promedio</CardTitle>
+              <TrendingUp className="h-4 w-4 text-green-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-green-600 mb-2">{promedioGeneral.toFixed(1)}</div>
+              <Badge variant="secondary" className={getColorCalificacion(promedioGeneral)}>
+                {promedioGeneral >= 6 ? "Aprobado" : "Necesita Mejorar"}
+              </Badge>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium dark:text-white">Material Disponible</CardTitle>
+              <BookOpen className="h-4 w-4 text-blue-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-blue-600 mb-2">{materiales.length}</div>
+              <p className="text-xs text-muted-foreground">Recursos educativos</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium dark:text-white">Calificaciones</CardTitle>
+              <FileText className="h-4 w-4 text-purple-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-purple-600 mb-2">{calificaciones.length}</div>
+              <p className="text-xs text-muted-foreground">Registradas</p>
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Calificaciones y Material */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          {/* Tabla Calificaciones */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Mis Calificaciones */}
           <Card>
-            <CardHeader><CardTitle>Mis Calificaciones</CardTitle></CardHeader>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 dark:text-white">
+                <TrendingUp className="h-5 w-5 text-green-600" />
+                Mis Calificaciones
+              </CardTitle>
+              <CardDescription>Historial de calificaciones por materia y periodo</CardDescription>
+            </CardHeader>
             <CardContent>
               {calificaciones.length > 0 ? (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Materia</TableHead>
-                      <TableHead>Calificación</TableHead>
-                      <TableHead>Periodo</TableHead>
-                      <TableHead>Estado</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {calificaciones.map(c => {
-                      const m = materias.get(c.materiaId)
-                      return (
-                        <TableRow key={c.id}>
-                          <TableCell className="font-medium">{m?.nombre || "—"}</TableCell>
-                          <TableCell>
-                            <Badge variant={variantCalif(c.valor)}>
-                              {c.valor.toFixed(1)}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>{fmtPeriodo(c.periodo)}</TableCell>
-                          <TableCell>
-                            <Badge variant={c.valor >= 6 ? "default" : "destructive"}>
-                              {c.valor >= 6 ? "Aprobado" : "Reprobado"}
-                            </Badge>
-                          </TableCell>
-                        </TableRow>
-                      )
-                    })}
-                  </TableBody>
-                </Table>
+                <ScrollArea className="h-[400px]">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Materia</TableHead>
+                        <TableHead>Calificación</TableHead>
+                        <TableHead>Periodo</TableHead>
+                        <TableHead>Estado</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {calificaciones.map((calificacion) => {
+                        const materia = materias.get(calificacion.materiaId)
+                        return (
+                          <TableRow key={calificacion.id}>
+                            <TableCell className="font-medium dark:text-white">
+                              {materia?.nombre || "Materia no encontrada"}
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="secondary" className={getColorCalificacion(calificacion.valor)}>
+                                {calificacion.valor.toFixed(1)}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="dark:text-white">{formatearPeriodo(calificacion.periodo)}</TableCell>
+                            <TableCell>
+                              <Badge variant={calificacion.valor >= 6 ? "default" : "destructive"}>
+                                {calificacion.valor >= 6 ? "Aprobado" : "Reprobado"}
+                              </Badge>
+                            </TableCell>
+                          </TableRow>
+                        )
+                      })}
+                    </TableBody>
+                  </Table>
+                </ScrollArea>
               ) : (
-                <div className="text-center py-8">
-                  <TrendingUp size={48} className="text-gray-300 mb-4" />
-                  <h3 className="text-lg font-semibold">No hay calificaciones</h3>
-                  <p className="text-gray-500">Tus calificaciones aparecerán aquí cuando sean registradas</p>
+                <div className="text-center py-12">
+                  <TrendingUp className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">No hay calificaciones</h3>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    Tus calificaciones aparecerán aquí cuando sean registradas
+                  </p>
                 </div>
               )}
             </CardContent>
@@ -201,45 +281,140 @@ function EstudianteDashboardContent() {
 
           {/* Material Educativo */}
           <Card>
-            <CardHeader><CardTitle>Material Educativo</CardTitle></CardHeader>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 dark:text-white">
+                <BookOpen className="h-5 w-5 text-blue-600" />
+                Material Educativo
+              </CardTitle>
+              <CardDescription>Recursos disponibles para estudio</CardDescription>
+            </CardHeader>
             <CardContent>
               {materiales.length > 0 ? (
-                <div className="space-y-3 max-h-96 overflow-y-auto">
-                  {materiales.map(mat => {
-                    const m = materias.get(mat.materiaId)
-                    return (
-                      <Card key={mat.id} className="bg-base-200 shadow-sm">
-                        <CardContent>
-                          <div className="flex justify-between items-start mb-2">
-                            <h4 className="font-medium text-sm">{mat.titulo}</h4>
-                            <Badge variant={variantTipo(mat.tipo)} className="flex items-center gap-1">
-                              {iconoTipo(mat.tipo)}
-                              {mat.tipo}
-                            </Badge>
-                          </div>
-                          <p className="text-xs text-gray-600 mb-2">{mat.descripcion}</p>
-                          <div className="flex justify-between items-center">
-                            <span className="text-xs text-gray-500">{m?.nombre} – {fmtFecha(mat.fechaSubida)}</span>
-                            <div className="flex gap-2">
-                              <Button variant="ghost" size="icon"><Eye size={12} /></Button>
-                              <Button variant="ghost" size="icon"><Download size={12} /></Button>
+                <ScrollArea className="h-[400px]">
+                  <div className="space-y-4">
+                    {materiales.map((material) => {
+                      const materia = materias.get(material.materiaId)
+                      const tieneArchivo = FileStorage.obtenerArchivo(material.id) !== null
+
+                      return (
+                        <Card key={material.id} className="bg-gray-50 dark:bg-gray-700 shadow-sm">
+                          <CardContent className="p-4">
+                            <div className="flex justify-between items-start mb-3">
+                              <div className="flex-1">
+                                <h4 className="font-semibold text-gray-900 dark:text-white mb-1">{material.titulo}</h4>
+                                <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">{material.descripcion}</p>
+                                <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                                  <Calendar className="h-3 w-3" />
+                                  {formatearFecha(material.fechaSubida)}
+                                  <Separator orientation="vertical" className="h-3" />
+                                  <span>{materia?.nombre}</span>
+                                </div>
+                              </div>
+                              <Badge variant="secondary" className={`${getColorTipo(material.tipo)} ml-2`}>
+                                <span className="flex items-center gap-1">
+                                  {getIconoTipo(material.tipo)}
+                                  {material.tipo}
+                                </span>
+                              </Badge>
                             </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    )
-                  })}
-                </div>
+
+                            <div className="flex gap-2">
+                              {material.tipo === "video" && material.url ? (
+                                <>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => handleVerVideo(material.url!)}
+                                    className="flex-1"
+                                  >
+                                    <ExternalLink className="h-4 w-4 mr-2" />
+                                    Ver Video
+                                  </Button>
+                                  <Button size="sm" variant="outline" onClick={() => handleCopiarURL(material.url!)}>
+                                    <Download className="h-4 w-4" />
+                                  </Button>
+                                </>
+                              ) : tieneArchivo ? (
+                                <>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => handlePrevisualizarMaterial(material.id)}
+                                    className="flex-1"
+                                  >
+                                    <Eye className="h-4 w-4 mr-2" />
+                                    Previsualizar
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => handleDescargarMaterial(material.id)}
+                                  >
+                                    <Download className="h-4 w-4" />
+                                  </Button>
+                                </>
+                              ) : (
+                                <div className="flex-1 text-center py-2">
+                                  <span className="text-sm text-gray-400">Sin archivo disponible</span>
+                                </div>
+                              )}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      )
+                    })}
+                  </div>
+                </ScrollArea>
               ) : (
-                <div className="text-center py-8">
-                  <BookOpen size={48} className="text-gray-300 mb-4" />
-                  <h3 className="text-lg font-semibold">No hay material disponible</h3>
-                  <p className="text-gray-500">Los profesores subirán material educativo aquí</p>
+                <div className="text-center py-12">
+                  <BookOpen className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                    No hay material disponible
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-400">Los profesores subirán material educativo aquí</p>
                 </div>
               )}
             </CardContent>
           </Card>
         </div>
+
+        {/* Notificaciones detalladas */}
+        {notificaciones.filter((n) => !n.leida).length > 0 && (
+          <Card className="mt-8">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 dark:text-white">
+                <Bell className="h-5 w-5 text-orange-600" />
+                Notificaciones Recientes
+              </CardTitle>
+              <CardDescription>Últimas actualizaciones del sistema</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {notificaciones
+                  .filter((n) => !n.leida)
+                  .map((notif) => (
+                    <Alert key={notif.id} className="border-l-4 border-l-blue-500">
+                      <Bell className="h-4 w-4" />
+                      <AlertDescription>
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <p className="font-medium dark:text-white">{notif.mensaje}</p>
+                            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                              {formatearFecha(notif.fecha)}
+                            </p>
+                          </div>
+                          <Button variant="ghost" size="sm">
+                            Marcar como leída
+                          </Button>
+                        </div>
+                      </AlertDescription>
+                    </Alert>
+                  ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
       </div>
     </div>
   )
