@@ -1,8 +1,8 @@
 services:
   db:
     image: mysql:9.1.0
-    hostname: db
     container_name: database
+    hostname: db
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
@@ -11,7 +11,7 @@ services:
     ports:
       - "${MYSQL_PORT}:3306"
     volumes:
-      - ./mysql-data:/var/lib/mysql
+      - dsoo-mysql-data:/var/lib/mysql
 
   phpmyadmin:
     image: phpmyadmin:5
@@ -24,4 +24,4 @@ services:
       - db
 
 volumes:
-  mysql-data:
+  dsoo-mysql-data:
