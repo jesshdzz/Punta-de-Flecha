@@ -44,10 +44,10 @@ export async function GET() {
 
     return NextResponse.json({
       ok: true,
-      alumnos: alumnosFormateados,
+      estudiantes: alumnosFormateados,
     })
   } catch (error) {
-    console.error("Error al obtener alumnos:", error)
-    return NextResponse.json({ ok: false, mensaje: "Error al obtener la lista de alumnos" }, { status: 500 })
+    console.error("Error al obtener los estudiantes:", error)
+    return NextResponse.json({ ok: false, mensaje: "Error al obtener la lista de estudiantes" }, { status: 500 })
   }
 }

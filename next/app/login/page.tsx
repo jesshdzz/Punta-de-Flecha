@@ -105,13 +105,16 @@ export default function LoginPage() {
                     <div className="divider">Usuarios de prueba</div>
                     <div className="space-y-1 text-sm text-base-content/70">
                         <p>
-                            <strong>Secretaria:</strong> secretaria@test.com / 123456
+                            <strong>Secretaria:</strong> carmen.ruiz@puntaflecha.edu / sec123
                         </p>
                         <p>
-                            <strong>Profesor:</strong> profesor@test.com / 123456
+                            <strong>Profesor:</strong> maria.garcia@puntaflecha.edu / prof123
                         </p>
                         <p>
-                            <strong>Estudiante:</strong> estudiante@test.com / 123456
+                            <strong>Padre de familia:</strong> ana.lopez@email.com / padre123
+                        </p>
+                        <p>
+                            <strong>Estudiante:</strong> jesus@alumno.com / Hola1234
                         </p>
                     </div>
                 </div>

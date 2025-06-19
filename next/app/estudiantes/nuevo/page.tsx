@@ -283,16 +283,16 @@ export default function NuevoEstudiantePage() {
                                     <label className="label">
                                         <span className="label-text">Monto de inscripción *</span>
                                     </label>
-                                    <input
-                                        type="number"
+                                    <select
                                         name="montoInscripcion"
                                         value={formData.montoInscripcion}
                                         onChange={handleChange}
-                                        className={`input input-bordered ${errors.montoInscripcion ? "input-error" : ""}`}
-                                        placeholder="0.00"
-                                        step="0.01"
-                                        min="0"
-                                    />
+                                        className={`select select-bordered ${errors.montoInscripcion ? "select-error" : ""}`}
+                                    >
+                                        <option value="">Seleccionar monto de pago *</option>
+                                        <option value="1000">Inscripción Completa - $1,000</option>
+                                        <option value="1500">Inscripción parcial - $700</option>
+                                    </select>
                                     {errors.montoInscripcion && <span className="text-sm text-error">{errors.montoInscripcion}</span>}
                                 </div>
                             </div>
@@ -324,6 +324,7 @@ export default function NuevoEstudiantePage() {
                                 </div>
 
                                 <div className="form-control">
+                                    <p className="text-gray-500">ana.lopez@email.com</p>
                                     <label className="label">
                                         <span className="label-text">Correo electrónico *</span>
                                     </label>
@@ -335,6 +336,7 @@ export default function NuevoEstudiantePage() {
                                         className={`input input-bordered ${errors["tutor.correo"] ? "input-error" : ""}`}
                                         placeholder="maria@ejemplo.com"
                                     />
+
                                     {errors["tutor.correo"] && <span className="text-sm text-error">{errors["tutor.correo"]}</span>}
                                 </div>
 

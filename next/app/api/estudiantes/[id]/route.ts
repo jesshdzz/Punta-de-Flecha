@@ -28,7 +28,7 @@ export async function GET(
   // Devuelvo TODO como strings para que el front use .trim()
   return NextResponse.json({
     ok: true,
-    alumno: {
+    estudiante: {
       estudianteId:   estudiante.usuarioId.toString(),
       nombre:         estudiante.usuario.nombre,
       correo:         estudiante.usuario.correo,

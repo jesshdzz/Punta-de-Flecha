@@ -316,16 +316,17 @@ export default function EditarEstudiantePage() {
                                         <label className="label">
                                             <span className="label-text">Monto de reinscripción *</span>
                                         </label>
-                                        <input
-                                            type="number"
+                                        <select
                                             name="montoReinscripcion"
                                             value={formData.montoReinscripcion}
                                             onChange={handleChange}
-                                            className={`input input-bordered ${errors.montoReinscripcion ? "input-error" : ""}`}
-                                            placeholder="0.00"
-                                            step="0.01"
-                                            min="0"
-                                        />
+                                            className={`select select-bordered ${errors.montoReinscripcion ? "select-error" : ""}`}
+                                        >
+                                            <option value="">Seleccionar monto</option>
+                                            <option value="1000">$300</option>
+                                            <option value="2000">$500</option>
+                                            <option value="3000">$800</option>
+                                        </select>
                                         {errors.montoReinscripcion && (
                                             <span className="text-sm text-error">{errors.montoReinscripcion}</span>
                                         )}
