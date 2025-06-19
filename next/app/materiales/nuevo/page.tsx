@@ -97,7 +97,7 @@ export default function NuevoMaterialPage() {
       }))
 
       const payload = {
-        profesorId: 1, // ID del profesor logueado (debería venir del contexto de autenticación)
+        profesorId: 28,// Simular ID de profesor
         titulo: formData.titulo,
         descripcion: formData.descripcion,
         categoria: formData.categoria,
@@ -105,7 +105,7 @@ export default function NuevoMaterialPage() {
         archivos: archivosSimulados,
       }
 
-      const response = await fetch("/api/agregarMaterial", {
+      const response = await fetch("/api/materiales/agregar", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -1,5 +1,6 @@
 import { Usuario } from './Usuario'
 import { Sistema } from './Sistema'
+import { MaterialEducativo } from './MaterialEducativo'
 
 export class Profesor extends Usuario implements MaterialProfesor {
     private materialId: number[] = []
@@ -78,6 +79,7 @@ export class Profesor extends Usuario implements MaterialProfesor {
         datos.grupoId
       );
 
+
     }
 
     modificarMaterial(): boolean {
@@ -92,5 +94,13 @@ export class Profesor extends Usuario implements MaterialProfesor {
 
     solicitarReporte(): void {
         console.log("Profesor solicitó un reporte.");
+    }
+
+    async consultarMaterial(): Promise<any> {
+        const idProfesor = this.getId();
+        if (!idProfesor) throw new Error("ID del profesor no definido");
+
+        const materiales = await Sistema.getInstancia().consultarMaterialPorId(idProfesor);
+        return materiales;
     }
 }

@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { Profesor } from '@/dominio/entidades/Profesor'
-import { Sistema } from '@/dominio/entidades/Sistema'
-
+import prisma from '@/lib/prisma'
 
 export async function POST(req: NextRequest) {
     try {
@@ -33,23 +32,53 @@ export async function POST(req: NextRequest) {
     }
 }
 
-export async function GET(request: NextRequest) {
+export async function GET(req: NextRequest) {
     try {
-        const { searchParams } = new URL(request.url)
-        const estudianteId = searchParams.get("estudianteId")
+        const { searchParams } = new URL(req.url)
+        const id = searchParams.get('id')
+        const materiaId = searchParams.get('materiaId')
+        const usuarioId = Number(id)
+        const materiaIdNum = Number(materiaId)
 
-        if (!estudianteId) {
-            return NextResponse.json({ error: "ID de estudiante es requerido" }, { status: 400 })
+        if (isNaN(usuarioId) || isNaN(materiaIdNum)) {
+            return NextResponse.json(
+                { ok: false, mensaje: 'ID inválido' },
+                { status: 400 }
+            )
         }
 
-        const sistema = Sistema.getInstancia()
-        const asistencias = await sistema.obtenerAsistenciasPorEstudiante(Number.parseInt(estudianteId))
-        return NextResponse.json({
-            success: true,
-            data: asistencias,
+        const asistencias = await prisma.asistencia.findFirst({
+            where: {
+                estudianteId: usuarioId,
+                materiaId: materiaIdNum,
+            }
         })
+
+        if (!asistencias) {
+            return NextResponse.json(
+                { ok: false, mensaje: 'asistencias no encontradas' },
+                { status: 404 }
+            )
+        }
+
+        // Devuelvo TODO como strings para que el front use .trim()
+        return NextResponse.json({
+            ok: true,
+            asistencias: {
+                estudianteId: asistencias.estudianteId.toString(),
+                materiaId: asistencias.materiaId.toString(),
+                asis_p1: asistencias.parcial1.toString(),
+                asis_p2: asistencias.parcial2.toString(),
+                asis_final: asistencias.final.toString(),
+            }
+        })
+
     } catch (error) {
-        console.error("Error al obtener asistencias:", error)
-        return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 })
+        console.error('Error al obtener asistencias:', error)
+        return NextResponse.json(
+            { ok: false, mensaje: 'Error al obtener asistencias' },
+            { status: 500 }
+        )
+
     }
 }

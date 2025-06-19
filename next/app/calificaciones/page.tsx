@@ -65,6 +65,49 @@ export default function CalificacionesPage() {
         }
     }
 
+    const fetchCalificaciones = async (estudianteId: string, materiaId: string) => {
+        try {
+            const response = await fetch(`/api/calificaciones?id=${estudianteId}&materiaId=${materiaId}`)
+            const data = await response.json()
+            if (data.ok) {
+                setCalificaciones({
+                    parcial1: data.calificaciones.calif_p1,
+                    parcial2: data.calificaciones.calif_r2,
+                    ordinario: data.calificaciones.ordinario,
+                    final: data.calificaciones.calif_final,
+                })
+                setSelectedEstudiante(data.calificaciones.estudianteId.toString())
+                setSelectedMateria(data.calificaciones.materiaId.toString())
+            } else {
+                setCalificaciones({
+                    parcial1: "",
+                    parcial2: "",
+                    ordinario: "",
+                    final: "",
+                })
+                setSelectedEstudiante("")
+                setSelectedMateria("")
+                setErrors({ general: data.mensaje || "Error al obtener calificaciones" })
+            }
+        } catch (error) {
+            console.error("Error al obtener calificaciones:", error)
+            setErrors({ general: "Error de conexión" })
+        }
+    }
+    
+    useEffect(() => {
+        if (selectedEstudiante && selectedMateria) {
+            fetchCalificaciones(selectedEstudiante, selectedMateria)
+        } else {
+            setCalificaciones({
+                parcial1: "",
+                parcial2: "",
+                ordinario: "",
+                final: "",
+            })
+        }
+    }, [selectedEstudiante, selectedMateria])
+
     const handleCalificacionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target
         setCalificaciones((prev) => ({
@@ -302,23 +345,18 @@ export default function CalificacionesPage() {
                                             {errors.ordinario && <span className="text-sm text-error">{errors.ordinario}</span>}
                                         </div>
 
-                                        <div className="form-control">
+                                        <div className="form-control flex flex-col">
                                             <label className="label">
-                                                <span className="label-text">Calificación Final *</span>
-                                                <span className="label-text-alt">0.0 - 10.0</span>
+                                                <span className="label-text">Calificación Final</span>
                                             </label>
                                             <input
                                                 type="number"
                                                 name="final"
                                                 value={calificaciones.final}
-                                                onChange={handleCalificacionChange}
                                                 className={`input input-bordered ${errors.final ? "input-error" : ""}`}
                                                 placeholder="0.0"
-                                                step="0.1"
-                                                min="0"
-                                                max="10"
+                                                disabled
                                             />
-                                            {errors.final && <span className="text-sm text-error">{errors.final}</span>}
                                         </div>
                                     </div>
                                 </div>
