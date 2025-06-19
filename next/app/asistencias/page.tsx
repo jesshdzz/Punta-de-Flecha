@@ -64,6 +64,46 @@ export default function AsistenciasPage() {
         }
     }
 
+    const fetchAsistencias = async (estudianteId: number, materiaId: number) => {
+        try {
+            const response = await fetch(`/api/asistencias?id=${estudianteId}&materiaId=${materiaId}`)
+            const data = await response.json()
+            if (data.ok) {
+                setAsistencias({
+                    parcial1: data.asistencias.asis_p1.toString(),
+                    parcial2: data.asistencias.asis_p2.toString(),
+                    final: data.asistencias.asis_final.toString(),
+                })
+                setSelectedEstudiante(data.asistencias.estudianteId.toString())
+                setSelectedMateria(data.asistencias.materiaId.toString())
+            } else {
+                setAsistencias({
+                    parcial1: "",
+                    parcial2: "",
+                    final: "",
+                })
+                setSelectedEstudiante("")
+                setSelectedMateria("")
+                setErrors({ general: data.mensaje || "Error al obtener asistencias" })
+            }
+        } catch (error) {
+            console.error("Error al obtener asistencias:", error)
+            setErrors({ general: "Error de conexión" })
+        }
+    }
+
+    useEffect(() => {
+        if (selectedEstudiante && selectedMateria) {
+            fetchAsistencias(Number.parseInt(selectedEstudiante), Number.parseInt(selectedMateria))
+        } else {
+            setAsistencias({
+                parcial1: "",
+                parcial2: "",
+                final: "",
+            })
+        }
+    }, [selectedEstudiante, selectedMateria])
+
     const handleAsistenciaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target
         setAsistencias((prev) => ({
@@ -245,7 +285,7 @@ export default function AsistenciasPage() {
                                         <div className="form-control">
                                             <label className="label">
                                                 <span className="label-text">Primer Parcial *</span>
-                                                <span className="label-text-alt">Días asistidos</span>
+                                                <span className="label-text-alt">Porcentaje de asistencia</span>
                                             </label>
                                             <input
                                                 type="number"
@@ -262,7 +302,7 @@ export default function AsistenciasPage() {
                                         <div className="form-control">
                                             <label className="label">
                                                 <span className="label-text">Segundo Parcial *</span>
-                                                <span className="label-text-alt">Días asistidos</span>
+                                                <span className="label-text-alt">Porcentaje de asistencia</span>
                                             </label>
                                             <input
                                                 type="number"
@@ -278,19 +318,16 @@ export default function AsistenciasPage() {
 
                                         <div className="form-control">
                                             <label className="label">
-                                                <span className="label-text">Total Final *</span>
-                                                <span className="label-text-alt">Días totales</span>
+                                                <span className="label-text-alt">Porcentaje de asistencia Total</span>
                                             </label>
                                             <input
                                                 type="number"
                                                 name="final"
                                                 value={asistencias.final}
-                                                onChange={handleAsistenciaChange}
                                                 className={`input input-bordered ${errors.final ? "input-error" : ""}`}
                                                 placeholder="0"
-                                                min="0"
+                                                disabled
                                             />
-                                            {errors.final && <span className="text-sm text-error">{errors.final}</span>}
                                         </div>
                                     </div>
 
@@ -298,10 +335,10 @@ export default function AsistenciasPage() {
                                     <div className="p-4 mt-4 rounded-lg bg-base-200">
                                         <h4 className="mb-2 font-semibold">Información:</h4>
                                         <ul className="space-y-1 text-sm text-base-content/70">
-                                            <li>• Registre el número de días que el estudiante asistió a clase</li>
+                                            <li>• Registre el porcentaje de asistencia que el estudiante tuvo durante el parcial</li>
                                             <li>• Los parciales corresponden a períodos específicos del semestre</li>
                                             <li>• El total final es el cálculo automático de asistencias totales</li>
-                                            <li>• Use números enteros (días completos de asistencia)</li>
+                                            <li>• Use números enteros</li>
                                         </ul>
                                     </div>
                                 </div>

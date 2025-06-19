@@ -10,6 +10,7 @@ import { SistemaValidacion } from "./SistemaValidacion";
 import { MaterialEducativo } from "./MaterialEducativo";
 import { Calificacion } from "./Calificacion";
 import { Asistencia } from "./Asistencia";
+import { ServicioNube } from "./ServicioNube";
 
 export class Sistema {
     private static instancia: Sistema;
@@ -100,10 +101,10 @@ export class Sistema {
 
             this.validador.validarMaterial(datos);
             this.validador.validarExtensionesArchivos(archivos);
-            const datosGrupo = await this.bd.obtenerDatosGrupoPorId(grupoId);
-            if (!datosGrupo) {
-                throw new Error("El grupo especificado no existe.");
-            }
+            // const datosGrupo = await this.bd.obtenerDatosGrupoPorId(grupoId);
+            // if (!datosGrupo) {
+            //     throw new Error("El grupo especificado no existe.");
+            // }
             // Tomamos la extensión del primer archivo para el ejemplo
             const nombreArchivo = archivos[0].name;
             const extension = nombreArchivo.substring(nombreArchivo.lastIndexOf('.') + 1).toLowerCase();
@@ -130,8 +131,8 @@ export class Sistema {
                 existencia: false,
                 tipoArchivo: extension,
                 fecha: new Date().toISOString(),
-                archivos,
-                grupoId
+                grupoId,
+                archivos
             });
         } catch (error) {
             console.error("Error en agregarMaterial:", error);
@@ -181,7 +182,7 @@ export class Sistema {
     }): Promise<void> {
         try {
             // Validar asistencia
-            this.validador.validarCalificacion(asistencia);
+            this.validador.validarAsistencia(asistencia);
 
             // Crear la asistencia
             const nuevaAsistencia = new Asistencia(
@@ -288,5 +289,54 @@ export class Sistema {
 
         // 3. Persistir trámite y actualizar estado
         await this.bd.guardarBajaEstudiante(baja);
+    }
+
+    public async consultarMaterialPorId(profesorId: number): Promise<any> {
+        try {
+            // Obtener todos los materiales de la base de datos
+            const materiales = await this.bd.obtenerMateriales(profesorId, null);
+            // simular la obtención de URL de archivos
+            const nube = ServicioNube.getInstancia();
+            nube.obtenerUrlArchivo(materiales.id, materiales.titulo);
+
+            return materiales;
+        } catch (error) {
+            console.error("Error al consultar materiales:", error);
+            throw new Error("Error al consultar materiales. Intente más tarde.");
+        }
+    }
+
+    public async consultarMaterialesPorGrupo(grupoId: number): Promise<any> {
+        try {
+            // Validar grupo
+            this.validador.validarGrupo(grupoId);
+
+            // Obtener materiales del grupo
+            const materiales = await this.bd.obtenerMateriales(null, grupoId);
+            // simular la obtención de URL de archivos
+            const nube = ServicioNube.getInstancia();
+            nube.obtenerUrlArchivo(materiales.id, materiales.titulo);
+
+            
+            return materiales;
+        } catch (error) {
+            console.error("Error al consultar materiales por grupo:", error);
+            throw new Error("Error al consultar materiales por grupo. Intente más tarde.");
+        }
+    }
+
+    public async consultarMateriales(): Promise<any> {
+        try {
+            // Obtener todos los materiales de la base de datos
+            const materiales = await this.bd.obtenerMateriales(null, null);
+            // simular la obtención de URL de archivos
+            const nube = ServicioNube.getInstancia();
+            nube.obtenerUrlArchivo(materiales.id, materiales.titulo);
+
+            return materiales;
+        } catch (error) {
+            console.error("Error al consultar todos los materiales:", error);
+            throw new Error("Error al consultar materiales. Intente más tarde.");
+        }
     }
 }

@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { Profesor } from '@/dominio/entidades/Profesor'
-import { Sistema } from '@/dominio/entidades/Sistema'
-
+import prisma from '@/lib/prisma'
 
 export async function POST(req: NextRequest) {
     try {
@@ -34,23 +33,54 @@ export async function POST(req: NextRequest) {
     }
 }
 
-export async function GET(request: NextRequest) {
+export async function GET(req: NextRequest) {
     try {
-        const { searchParams } = new URL(request.url)
-        const estudianteId = searchParams.get("estudianteId")
+        const { searchParams } = new URL(req.url)
+        const id = searchParams.get('id')
+        const materiaId = searchParams.get('materiaId')
+        const usuarioId = Number(id)
+        const materiaIdNum = Number(materiaId)
 
-        if (!estudianteId) {
-            return NextResponse.json({ error: "ID de estudiante es requerido" }, { status: 400 })
+        if (isNaN(usuarioId) || isNaN(materiaIdNum)) {
+            return NextResponse.json(
+                { ok: false, mensaje: 'ID inválido' },
+                { status: 400 }
+            )
         }
 
-        const sistema = Sistema.getInstancia()
-        const calificaciones = await sistema.obtenerCalificacionesPorEstudiante(Number.parseInt(estudianteId))
-        return NextResponse.json({
-            success: true,
-            data: calificaciones,
+        const calificaciones = await prisma.calificacion.findFirst({
+            where: {
+                estudianteId: usuarioId,
+                materiaId: materiaIdNum,
+            }
         })
+
+        if (!calificaciones) {
+            return NextResponse.json(
+                { ok: false, mensaje: 'Calificaciones no encontradas' },
+                { status: 404 }
+            )
+        }
+
+        // Devuelvo TODO como strings para que el front use .trim()
+        return NextResponse.json({
+            ok: true,
+            calificaciones: {
+                estudianteId: calificaciones.estudianteId.toString(),
+                materiaId: calificaciones.materiaId.toString(),
+                calif_p1: calificaciones.parcial1.toString(),
+                calif_r2: calificaciones.parcial2.toString(),
+                ordinario: calificaciones.ordinario.toString(),
+                calif_final: calificaciones.final.toString(),
+            }
+        })
+
     } catch (error) {
-        console.error("Error al obtener calificaciones:", error)
-        return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 })
+        console.error('Error al obtener calificaciones:', error)
+        return NextResponse.json(
+            { ok: false, mensaje: 'Error al obtener calificaciones' },
+            { status: 500 }
+        )
+
     }
 }

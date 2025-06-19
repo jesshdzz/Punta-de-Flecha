@@ -67,27 +67,32 @@ export default function DashboardPage() {
         },
         {
             title: "Material Educativo",
-            description: "Subir y gestionar materiales de clase",
+            description:
+                usuario?.puesto === "Estudiante"
+                    ? "Ver y descargar materiales de clase"
+                    : "Subir y gestionar materiales de clase",
             icon: BookOpen,
-            href: "/materiales",
+            href: usuario?.puesto === "Estudiante" ? "/materiales/estudiante" : "/materiales",
             color: "bg-green-500",
-            roles: ["Profesor", "Administrador"],
-        },
-        {
-            title: "Calificaciones",
-            description: "Registrar y consultar calificaciones",
-            icon: GraduationCap,
-            href: "/calificaciones",
-            color: "bg-purple-500",
             roles: ["Profesor", "Administrador", "Estudiante"],
         },
         {
+            title: "Calificaciones",
+            description:
+                usuario?.puesto === "Estudiante" ? "Consultar tus calificaciones" : "Registrar y consultar calificaciones",
+            icon: GraduationCap,
+            href: "/calificaciones",
+            color: "bg-purple-500",
+            roles: ["Profesor", "Administrador", "Estudiante", "Padre_familia"],
+        },
+        {
             title: "Asistencias",
-            description: "Control de asistencias por materia",
+            description:
+                usuario?.puesto === "Estudiante" ? "Consultar tus asistencias" : "Control de asistencias por materia",
             icon: FileText,
             href: "/asistencias",
             color: "bg-orange-500",
-            roles: ["Profesor", "Administrador"],
+            roles: ["Profesor", "Administrador", "Estudiante", "Padre_familia"],
         },
         {
             title: "Reportes",

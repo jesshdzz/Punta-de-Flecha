@@ -7,6 +7,7 @@ import { Pago } from "./Pago";
 import { Recibo } from "./Recibo";
 import { Tramite } from "./Tramite";
 import { Calificacion } from "./Calificacion";
+import { MaterialEducativo } from "./MaterialEducativo";
 
 
 export class BaseDatos {
@@ -531,6 +532,65 @@ export class BaseDatos {
 
         } catch (error) {
             console.error("Error al registrar asistencia:", error);
+            throw error;
+        }
+    }
+
+    public async obtenerMateriales(profesorId: number | null, grupoId: number | null): Promise<any> {
+        try {
+            const whereClause: any = {};
+
+            if (profesorId) {
+                whereClause.profesorId = profesorId;
+            }
+
+            if (grupoId) {
+                whereClause.grupoId = grupoId;
+            }
+
+            const materiales = await prisma.materialEducativo.findMany({
+                where: whereClause,
+                include: {
+                    profesor: {
+                        include: {
+                            usuario: true,
+                        },
+                    },
+                    grupo: true,
+                    archivo: true,
+                },
+                orderBy: {
+                    fecha: "desc",
+                },
+            });
+
+            const materialesFormateados = materiales.map((material) => ({
+                id: material.id,
+                titulo: material.titulo,
+                descripcion: material.descripcion,
+                categoria: material.categoria,
+                fecha: material.fecha.toISOString(),
+                existencia: material.existencia,
+                tipoArchivo: material.tipoArchivo,
+                profesor: {
+                    id: material.profesor.usuarioId,
+                    nombre: material.profesor.usuario.nombre,
+                },
+                grupo: {
+                    id: material.grupo.id,
+                    nombre: material.grupo.nombre,
+                    grado: material.grupo.grado,
+                },
+                archivos: material.archivo.map((archivo) => ({
+                    id: archivo.id,
+                    nombreArchivo: archivo.nombreArchivo,
+                    urlNube: archivo.urlNube,
+                })),
+            }));
+
+            return materialesFormateados;
+        } catch (error) {
+            console.error("Error al obtener materiales:", error);
             throw error;
         }
     }

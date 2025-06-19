@@ -218,4 +218,36 @@ export class SistemaValidacion {
 
         return true
     }
+
+    public validarAsistencia(asistencia: {
+        estudianteId: number;
+        materiaId: number;
+        parcial1: number;
+        parcial2: number;
+        final: number;
+    }): boolean {
+        const { estudianteId, materiaId, parcial1, parcial2, final } = asistencia;
+
+        if (estudianteId <= 0) {
+            throw new Error("El ID del estudiante debe ser un número positivo.");
+        }
+
+        if (materiaId <= 0) {
+            throw new Error("El ID de la materia debe ser un número positivo.");
+        }
+
+        if (parcial1 < 0 || parcial1 > 100) {
+            throw new Error("La asistencia del primer parcial debe estar entre 0 y 100.");
+        }
+
+        if (parcial2 < 0 || parcial2 > 100) {
+            throw new Error("La asistencia del segundo parcial debe estar entre 0 y 100.");
+        }
+
+        if (final < 0 || final > 100) {
+            throw new Error("La asistencia del examen final debe estar entre 0 y 100.");
+        }
+
+        return true
+    }
 }

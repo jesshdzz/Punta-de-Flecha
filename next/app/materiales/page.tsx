@@ -12,16 +12,19 @@ interface Material {
     categoria: string
     fecha: string
     profesor: {
+        id: number
         nombre: string
     }
     grupo: {
+        id: number
         nombre: string
         grado: number
     }
-    archivos: {
+    archivos: Array<{
+        id: number
         nombreArchivo: string
         urlNube: string
-    }[]
+    }>
 }
 
 export default function MaterialesPage() {
@@ -29,36 +32,24 @@ export default function MaterialesPage() {
     const [loading, setLoading] = useState(true)
     const [searchTerm, setSearchTerm] = useState("")
     const [filterCategoria, setFilterCategoria] = useState("todas")
-    const router = useRouter()
 
     useEffect(() => {
-        // Simulamos datos de materiales ya que no hay endpoint específico
-        setTimeout(() => {
-            setMateriales([
-                {
-                    id: 1,
-                    titulo: "Fundamentos de Matemáticas",
-                    descripcion: "Material teórico de la primera unidad de matemáticas básicas",
-                    categoria: "Matemáticas",
-                    fecha: "2024-01-15",
-                    profesor: { nombre: "Prof. García" },
-                    grupo: { nombre: "1A", grado: 1 },
-                    archivos: [{ nombreArchivo: "matematicas_unidad1.pdf", urlNube: "https://example.com/file1.pdf" }],
-                },
-                {
-                    id: 2,
-                    titulo: "Historia de México",
-                    descripcion: "Presentación sobre la independencia de México",
-                    categoria: "Historia",
-                    fecha: "2024-01-10",
-                    profesor: { nombre: "Prof. López" },
-                    grupo: { nombre: "2B", grado: 2 },
-                    archivos: [{ nombreArchivo: "historia_independencia.pptx", urlNube: "https://example.com/file2.pptx" }],
-                },
-            ])
-            setLoading(false)
-        }, 1000)
+        fetchMateriales()
     }, [])
+
+    const fetchMateriales = async () => {
+        try {
+            const response = await fetch("/api/materiales")
+            const data = await response.json()
+            if (data.ok) {
+                setMateriales(data.materiales)
+            }
+        } catch (error) {
+            console.error("Error al obtener materiales:", error)
+        } finally {
+            setLoading(false)
+        }
+    }
 
     const filteredMateriales = materiales.filter((material) => {
         const matchesSearch =
