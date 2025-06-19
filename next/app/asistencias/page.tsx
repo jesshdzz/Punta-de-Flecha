@@ -1,196 +1,393 @@
 "use client"
 
+import type React from "react"
+
 import { useState, useEffect } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Search, Plus, ArrowLeft, Clock } from "lucide-react"
-import { BaseDatos } from "@/lib/database"
-import type { Asistencia, Estudiante, Materia } from "@/types"
 import Link from "next/link"
+import { ArrowLeft, FileText, Save, Search } from "lucide-react"
+
+interface Materia {
+    id: number
+    nombre: string
+    profesor: {
+        id: number
+        nombre: string
+    }
+}
+
+interface Estudiante {
+    id: number
+    nombre: string
+    correo: string
+}
 
 export default function AsistenciasPage() {
-  const [asistencias, setAsistencias] = useState<Asistencia[]>([])
-  const [estudiantes, setEstudiantes] = useState<Map<string, Estudiante>>(new Map())
-  const [materias, setMaterias] = useState<Map<string, Materia>>(new Map())
-  const [filtro, setFiltro] = useState("")
+    const [materias, setMaterias] = useState<Materia[]>([])
+    const [estudiantes, setEstudiantes] = useState<Estudiante[]>([])
+    const [selectedMateria, setSelectedMateria] = useState("")
+    const [selectedEstudiante, setSelectedEstudiante] = useState("")
+    const [searchTerm, setSearchTerm] = useState("")
+    const [loading, setLoading] = useState(false)
+    const [asistencias, setAsistencias] = useState({
+        parcial1: "",
+        parcial2: "",
+        final: "",
+    })
+    const [errors, setErrors] = useState<Record<string, string>>({})
 
-  useEffect(() => {
-    const db = BaseDatos.getInstance()
+    useEffect(() => {
+        fetchMaterias()
+        fetchEstudiantes()
+    }, [])
 
-    // Agregar algunas asistencias de ejemplo si no existen
-    if (!db.obtenerAsistencias || db.obtenerAsistencias().length === 0) {
-      const asistenciasEjemplo: Asistencia[] = [
-        {
-          id: "ast_1",
-          estudianteId: "est1",
-          materiaId: "mat1",
-          porcentaje: 90,
-          fecha: new Date("2024-01-15"),
-          profesorId: "2",
-        },
-        {
-          id: "ast_2",
-          estudianteId: "est1",
-          materiaId: "mat1",
-          porcentaje: 85,
-          fecha: new Date("2024-02-15"),
-          profesorId: "2",
-          observaciones: "Llegó tarde a clase",
-        },
-      ]
-
-      asistenciasEjemplo.forEach((ast) => {
-        if (db.crearAsistencia) {
-          db.crearAsistencia(ast)
+    const fetchMaterias = async () => {
+        try {
+            const response = await fetch("/api/materias")
+            const data = await response.json()
+            if (data.ok) {
+                setMaterias(data.materias)
+            }
+        } catch (error) {
+            console.error("Error al obtener materias:", error)
         }
-      })
     }
 
-    setAsistencias(db.obtenerAsistencias ? db.obtenerAsistencias() : [])
+    const fetchEstudiantes = async () => {
+        try {
+            const response = await fetch("/api/estudiantes")
+            const data = await response.json()
+            if (data.ok) {
+                setEstudiantes(data.estudiantes.filter((estudiante: any) => estudiante.estado === "Activo"))
+            }
+        } catch (error) {
+            console.error("Error al obtener estudiantes:", error)
+        }
+    }
 
-    // Crear mapas para búsqueda rápida
-    const estudiantesMap = new Map()
-    db.obtenerTodosEstudiantes().forEach((est) => {
-      estudiantesMap.set(est.id, est)
-    })
-    setEstudiantes(estudiantesMap)
+    const handleAsistenciaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target
+        setAsistencias((prev) => ({
+            ...prev,
+            [name]: value,
+        }))
 
-    const materiasMap = new Map()
-    db.obtenerMaterias().forEach((mat) => {
-      materiasMap.set(mat.id, mat)
-    })
-    setMaterias(materiasMap)
-  }, [])
+        // Limpiar error del campo
+        if (errors[name]) {
+            setErrors((prev) => ({
+                ...prev,
+                [name]: "",
+            }))
+        }
+    }
 
-  const asistenciasFiltradas = asistencias.filter((asistencia) => {
-    const estudiante = estudiantes.get(asistencia.estudianteId)
-    const materia = materias.get(asistencia.materiaId)
+    const validateForm = () => {
+        const newErrors: Record<string, string> = {}
 
-    if (!estudiante || !materia) return false
+        if (!selectedMateria) newErrors.materia = "Debe seleccionar una materia"
+        if (!selectedEstudiante) newErrors.estudiante = "Debe seleccionar un estudiante"
 
-    const nombreCompleto = `${estudiante.nombre} ${estudiante.apellidos}`.toLowerCase()
-    const nombreMateria = materia.nombre.toLowerCase()
-    const filtroLower = filtro.toLowerCase()
+        // Validar asistencias (números enteros >= 0)
+        const campos = ["parcial1", "parcial2", "final"]
+        campos.forEach((campo) => {
+            const valor = Number.parseInt(asistencias[campo as keyof typeof asistencias])
+            if (isNaN(valor) || valor < 0) {
+                newErrors[campo] = "La asistencia debe ser un número entero mayor o igual a 0"
+            }
+        })
+
+        setErrors(newErrors)
+        return Object.keys(newErrors).length === 0
+    }
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault()
+
+        if (!validateForm()) return
+
+        setLoading(true)
+
+        try {
+            const payload = {
+                estudianteId: Number.parseInt(selectedEstudiante),
+                materiaId: Number.parseInt(selectedMateria),
+                asis_p1: Number.parseInt(asistencias.parcial1),
+                asis_p2: Number.parseInt(asistencias.parcial2),
+                asis_final: Number.parseInt(asistencias.final),
+            }
+
+            const response = await fetch("/api/asistencias", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(payload),
+            })
+
+            const data = await response.json()
+
+            if (data.ok) {
+                // Limpiar formulario
+                setAsistencias({
+                    parcial1: "",
+                    parcial2: "",
+                    final: "",
+                })
+                setSelectedEstudiante("")
+                alert("Asistencias registradas correctamente")
+            } else {
+                setErrors({ general: data.mensaje || "Error al registrar asistencias" })
+            }
+        } catch (error) {
+            setErrors({ general: "Error de conexión" })
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    const filteredEstudiantes = estudiantes.filter((estudiante) => estudiante.nombre.toLowerCase().includes(searchTerm.toLowerCase()))
 
     return (
-      nombreCompleto.includes(filtroLower) ||
-      nombreMateria.includes(filtroLower) ||
-      asistencia.fecha.toLocaleDateString().includes(filtroLower)
-    )
-  })
+        <div className="min-h-screen bg-base-200">
+            {/* Navbar */}
+            <div className="shadow-lg navbar bg-base-100">
+                <div className="flex-1">
+                    <Link href="/dashboard" className="btn btn-ghost">
+                        <ArrowLeft className="w-4 h-4" />
+                        Volver al Dashboard
+                    </Link>
+                </div>
+            </div>
 
-  const getColorPorcentaje = (porcentaje: number) => {
-    if (porcentaje >= 90) return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-    if (porcentaje >= 80) return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
-    if (porcentaje >= 70) return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
-    return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-  }
+            <div className="container px-4 py-8 mx-auto">
+                <div className="mb-8">
+                    <h1 className="flex items-center gap-2 mb-2 text-3xl font-bold text-base-content">
+                        <FileText className="w-8 h-8" />
+                        Registro de Asistencias
+                    </h1>
+                    <p className="text-base-content/70">Registra las asistencias de los estudiantes por materia y período</p>
+                </div>
 
-  const formatearFecha = (fecha: Date) => {
-    return fecha.toLocaleDateString("es-ES")
-  }
+                <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+                    {/* Formulario */}
+                    <div className="lg:col-span-2">
+                        <form onSubmit={handleSubmit} className="space-y-6">
+                            {/* Selección de Materia y Estudiante */}
+                            <div className="shadow-lg card bg-base-100">
+                                <div className="card-body">
+                                    <h2 className="mb-4 text-xl card-title">Seleccionar Estudiante y Materia</h2>
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-teal-100 dark:from-gray-900 dark:to-green-900/30">
-      <div className="container mx-auto p-6">
-        <div className="mb-6">
-          <div className="flex items-center gap-4 mb-4">
-            <Link href="/">
-              <Button variant="outline" size="sm">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Volver al Dashboard
-              </Button>
-            </Link>
-          </div>
+                                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                        <div className="form-control">
+                                            <label className="label">
+                                                <span className="label-text">Materia *</span>
+                                            </label>
+                                            <select
+                                                value={selectedMateria}
+                                                onChange={(e) => setSelectedMateria(e.target.value)}
+                                                className={`select select-bordered ${errors.materia ? "select-error" : ""}`}
+                                            >
+                                                <option value="">Seleccionar materia</option>
+                                                {materias.map((materia) => (
+                                                    <option key={materia.id} value={materia.id}>
+                                                        {materia.nombre} - {materia.profesor.nombre}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                            {errors.materia && <span className="text-sm text-error">{errors.materia}</span>}
+                                        </div>
 
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-base-content mb-2">Control de Asistencias</h1>
-          <p className="text-gray-600 dark:text-base-content/70">Consultar y registrar asistencias de estudiantes</p>
+                                        <div className="form-control">
+                                            <label className="label">
+                                                <span className="label-text">Buscar estudiante</span>
+                                            </label>
+                                            <div className="input-group">
+                                                <span>
+                                                    <Search className="w-4 h-4" />
+                                                </span>
+                                                <input
+                                                    type="text"
+                                                    placeholder="Buscar por nombre..."
+                                                    className="w-full input input-bordered"
+                                                    value={searchTerm}
+                                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="form-control md:col-span-2">
+                                            <label className="label">
+                                                <span className="label-text">Estudiante *</span>
+                                            </label>
+                                            <select
+                                                value={selectedEstudiante}
+                                                onChange={(e) => setSelectedEstudiante(e.target.value)}
+                                                className={`select select-bordered ${errors.estudiante ? "select-error" : ""}`}
+                                            >
+                                                <option value="">Seleccionar estudiante</option>
+                                                {filteredEstudiantes.map((estudiante) => (
+                                                    <option key={estudiante.id} value={estudiante.id}>
+                                                        {estudiante.nombre} - {estudiante.correo}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                            {errors.estudiante && <span className="text-sm text-error">{errors.estudiante}</span>}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Asistencias */}
+                            <div className="shadow-lg card bg-base-100">
+                                <div className="card-body">
+                                    <h2 className="mb-4 text-xl card-title">Registro de Asistencias</h2>
+
+                                    <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                                        <div className="form-control">
+                                            <label className="label">
+                                                <span className="label-text">Primer Parcial *</span>
+                                                <span className="label-text-alt">Días asistidos</span>
+                                            </label>
+                                            <input
+                                                type="number"
+                                                name="parcial1"
+                                                value={asistencias.parcial1}
+                                                onChange={handleAsistenciaChange}
+                                                className={`input input-bordered ${errors.parcial1 ? "input-error" : ""}`}
+                                                placeholder="0"
+                                                min="0"
+                                            />
+                                            {errors.parcial1 && <span className="text-sm text-error">{errors.parcial1}</span>}
+                                        </div>
+
+                                        <div className="form-control">
+                                            <label className="label">
+                                                <span className="label-text">Segundo Parcial *</span>
+                                                <span className="label-text-alt">Días asistidos</span>
+                                            </label>
+                                            <input
+                                                type="number"
+                                                name="parcial2"
+                                                value={asistencias.parcial2}
+                                                onChange={handleAsistenciaChange}
+                                                className={`input input-bordered ${errors.parcial2 ? "input-error" : ""}`}
+                                                placeholder="0"
+                                                min="0"
+                                            />
+                                            {errors.parcial2 && <span className="text-sm text-error">{errors.parcial2}</span>}
+                                        </div>
+
+                                        <div className="form-control">
+                                            <label className="label">
+                                                <span className="label-text">Total Final *</span>
+                                                <span className="label-text-alt">Días totales</span>
+                                            </label>
+                                            <input
+                                                type="number"
+                                                name="final"
+                                                value={asistencias.final}
+                                                onChange={handleAsistenciaChange}
+                                                className={`input input-bordered ${errors.final ? "input-error" : ""}`}
+                                                placeholder="0"
+                                                min="0"
+                                            />
+                                            {errors.final && <span className="text-sm text-error">{errors.final}</span>}
+                                        </div>
+                                    </div>
+
+                                    {/* Información adicional */}
+                                    <div className="p-4 mt-4 rounded-lg bg-base-200">
+                                        <h4 className="mb-2 font-semibold">Información:</h4>
+                                        <ul className="space-y-1 text-sm text-base-content/70">
+                                            <li>• Registre el número de días que el estudiante asistió a clase</li>
+                                            <li>• Los parciales corresponden a períodos específicos del semestre</li>
+                                            <li>• El total final es el cálculo automático de asistencias totales</li>
+                                            <li>• Use números enteros (días completos de asistencia)</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Error general */}
+                            {errors.general && (
+                                <div className="alert alert-error">
+                                    <span>{errors.general}</span>
+                                </div>
+                            )}
+
+                            {/* Botón de envío */}
+                            <div className="flex justify-end">
+                                <button type="submit" className={`btn btn-primary ${loading ? "loading" : ""}`} disabled={loading}>
+                                    {loading ? (
+                                        "Guardando..."
+                                    ) : (
+                                        <>
+                                            <Save className="w-4 h-4" />
+                                            Registrar Asistencias
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    {/* Panel de información */}
+                    <div className="space-y-6">
+                        <div className="shadow-lg card bg-base-100">
+                            <div className="card-body">
+                                <h3 className="text-lg card-title">Estadísticas</h3>
+                                <div className="space-y-3 text-sm">
+                                    <div className="flex justify-between">
+                                        <span>Total Materias:</span>
+                                        <span className="font-bold">{materias.length}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span>Estudiantes Activos:</span>
+                                        <span className="font-bold">{estudiantes.length}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="shadow-lg card bg-base-100">
+                            <div className="card-body">
+                                <h3 className="text-lg card-title">Criterios de Asistencia</h3>
+                                <div className="space-y-2 text-sm">
+                                    <div className="flex justify-between">
+                                        <span>Excelente:</span>
+                                        <span className="badge badge-success">95% - 100%</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span>Muy Buena:</span>
+                                        <span className="badge badge-info">85% - 94%</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span>Buena:</span>
+                                        <span className="badge badge-warning">75% - 84%</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span>Regular:</span>
+                                        <span className="badge badge-secondary">65% - 74%</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span>Deficiente:</span>
+                                        <span className="badge badge-error">{"<"} 65%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="shadow-lg card bg-base-100">
+                            <div className="card-body">
+                                <h3 className="text-lg card-title">Recordatorio</h3>
+                                <p className="text-sm text-base-content/70">
+                                    La asistencia es fundamental para el aprovechamiento académico. Mantenga un registro preciso para
+                                    ayudar a identificar estudiantes que requieren apoyo adicional.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-
-        <Card className="bg-white dark:bg-gray-800 shadow-lg mb-6">
-          <CardHeader>
-            <div className="flex justify-between items-center">
-              <div>
-                <CardTitle className="dark:text-base-content">Registro de Asistencias</CardTitle>
-                <CardDescription>Total de registros: {asistenciasFiltradas.length}</CardDescription>
-              </div>
-              <Link href="/asistencias/registrar">
-                <Button className="bg-blue-600 text-white hover:bg-blue-700 dark:text-white">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Registrar Asistencia
-                </Button>
-              </Link>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="flex gap-4 mb-6">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                <Input
-                  placeholder="Buscar por estudiante, materia o fecha..."
-                  value={filtro}
-                  onChange={(e) => setFiltro(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            </div>
-
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Estudiante</TableHead>
-                    <TableHead>Materia</TableHead>
-                    <TableHead>Porcentaje</TableHead>
-                    <TableHead>Fecha</TableHead>
-                    <TableHead>Observaciones</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {asistenciasFiltradas.map((asistencia) => {
-                    const estudiante = estudiantes.get(asistencia.estudianteId)
-                    const materia = materias.get(asistencia.materiaId)
-
-                    if (!estudiante || !materia) return null
-
-                    return (
-                      <TableRow key={asistencia.id}>
-                        <TableCell className="font-medium dark:text-white">
-                          {estudiante.nombre} {estudiante.apellidos}
-                          <div className="text-sm text-gray-500 dark:text-gray-400">
-                            {estudiante.grado}
-                            {estudiante.grupo}
-                          </div>
-                        </TableCell>
-                        <TableCell className="dark:text-white">{materia.nombre}</TableCell>
-                        <TableCell>
-                          <Badge variant="secondary" className={getColorPorcentaje(asistencia.porcentaje)}>
-                            <Clock className="h-3 w-3 mr-1" />
-                            {asistencia.porcentaje}%
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="dark:text-white">{formatearFecha(asistencia.fecha)}</TableCell>
-                        <TableCell className="dark:text-white">
-                          {asistencia.observaciones || <span className="text-gray-400">-</span>}
-                        </TableCell>
-                      </TableRow>
-                    )
-                  })}
-                </TableBody>
-              </Table>
-            </div>
-
-            {asistenciasFiltradas.length === 0 && (
-              <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                No se encontraron registros de asistencia que coincidan con la búsqueda
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-    </div>
-  )
+    )
 }

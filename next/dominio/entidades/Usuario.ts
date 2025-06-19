@@ -1,6 +1,6 @@
 export type RolUsuario = 'Administrador' | 'Profesor' | 'Estudiante' | 'Padre_familia' | 'Secretaria'
 
-export abstract class Usuario {
+export class Usuario {
     constructor(
         private id: number | null, // El ID puede ser null si es un nuevo usuario
         private nombre: string,
