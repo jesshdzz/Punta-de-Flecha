@@ -112,6 +112,7 @@ model MaterialEducativo{
   profesor    Profesor @relation(fields: [profesorId], references: [usuarioId])
   grupo       Grupo     @relation(fields: [grupoId], references: [id])  
   archivo     ArchivoSubido[]
+}
 
 model ArchivoSubido {
     id            Int               @id @default(autoincrement())

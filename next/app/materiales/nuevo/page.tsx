@@ -3,331 +3,314 @@
 import type React from "react"
 
 import { useState, useEffect } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ArrowLeft, Save, Upload } from "lucide-react"
-import { BaseDatos } from "@/lib/database"
-import { FileStorage } from "@/lib/file-storage"
-import type { MaterialEducativo, Materia } from "@/types"
-import Link from "next/link"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
+import { ArrowLeft, Upload, Save, BookOpen, X } from "lucide-react"
+
+interface Grupo {
+  id: number
+  nombre: string
+  grado: number
+}
 
 export default function NuevoMaterialPage() {
+  const [grupos, setGrupos] = useState<Grupo[]>([])
+  const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
     titulo: "",
     descripcion: "",
-    tipo: "" as "libro" | "documento" | "video" | "presentacion" | "",
-    materiaId: "",
-    url: "",
+    categoria: "",
+    grupoId: "",
   })
-  const [materias, setMaterias] = useState<Materia[]>([])
-  const [errores, setErrores] = useState<Record<string, string>>({})
-  const [guardando, setGuardando] = useState(false)
+  const [archivos, setArchivos] = useState<File[]>([])
+  const [errors, setErrors] = useState<Record<string, string>>({})
   const router = useRouter()
-  const [archivoSeleccionado, setArchivoSeleccionado] = useState<File | null>(null)
+
+  const categorias = ["Matemáticas", "Lenguaje", "Ciencias", "Historia", "Otro"]
 
   useEffect(() => {
-    const db = BaseDatos.getInstance()
-    setMaterias(db.obtenerMaterias())
+    fetchGrupos()
   }, [])
 
-  const validarFormulario = (): boolean => {
-    const nuevosErrores: Record<string, string> = {}
-
-    if (!formData.titulo.trim()) {
-      nuevosErrores.titulo = "El título es requerido"
+  const fetchGrupos = async () => {
+    try {
+      const response = await fetch("/api/grupos")
+      const data = await response.json()
+      if (data.ok) {
+        setGrupos(data.grupos)
+      }
+    } catch (error) {
+      console.error("Error al obtener grupos:", error)
     }
+  }
 
-    if (!formData.descripcion.trim()) {
-      nuevosErrores.descripcion = "La descripción es requerida"
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }))
+
+    // Limpiar error del campo
+    if (errors[name]) {
+      setErrors((prev) => ({
+        ...prev,
+        [name]: "",
+      }))
     }
+  }
 
-    if (!formData.tipo) {
-      nuevosErrores.tipo = "Seleccione un tipo de material"
-    }
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || [])
+    setArchivos((prev) => [...prev, ...files])
+  }
 
-    if (!formData.materiaId) {
-      nuevosErrores.materiaId = "Seleccione una materia"
-    }
+  const removeFile = (index: number) => {
+    setArchivos((prev) => prev.filter((_, i) => i !== index))
+  }
 
-    if (formData.tipo === "video" && !formData.url.trim()) {
-      nuevosErrores.url = "La URL es requerida para videos"
-    }
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {}
 
-    setErrores(nuevosErrores)
-    return Object.keys(nuevosErrores).length === 0
+    if (!formData.titulo.trim()) newErrors.titulo = "El título es requerido"
+    if (!formData.descripcion.trim()) newErrors.descripcion = "La descripción es requerida"
+    if (!formData.categoria) newErrors.categoria = "Debe seleccionar una categoría"
+    if (!formData.grupoId) newErrors.grupoId = "Debe seleccionar un grupo"
+    if (archivos.length === 0) newErrors.archivos = "Debe subir al menos un archivo"
+
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!validarFormulario()) {
-      return
-    }
+    if (!validateForm()) return
 
-    setGuardando(true)
+    setLoading(true)
 
     try {
-      const db = BaseDatos.getInstance()
-      const materialId = "mat_" + Date.now().toString()
+      // Simular archivos para la API (ya que no podemos subir archivos reales en este entorno)
+      const archivosSimulados = archivos.map((archivo) => ({
+        nombreArchivo: archivo.name,
+        name: archivo.name,
+      }))
 
-      // Si hay archivo seleccionado, guardarlo en localStorage
-      if (archivoSeleccionado) {
-        await FileStorage.guardarArchivo(archivoSeleccionado, materialId)
-      }
-
-      const nuevoMaterial: MaterialEducativo = {
-        id: materialId,
+      const payload = {
+        profesorId: 1, // ID del profesor logueado (debería venir del contexto de autenticación)
         titulo: formData.titulo,
         descripcion: formData.descripcion,
-        tipo: formData.tipo,
-        materiaId: formData.materiaId,
-        url: formData.url || undefined,
-        fechaSubida: new Date(),
+        categoria: formData.categoria,
+        grupoId: Number.parseInt(formData.grupoId),
+        archivos: archivosSimulados,
       }
 
-      if (db.crearMaterialEducativo(nuevoMaterial)) {
-        alert("Material educativo subido exitosamente")
-        router.push("/materiales")
+      const response = await fetch("/api/agregarMaterial", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        router.push("/materiales?success=created")
       } else {
-        alert("Error al subir el material")
+        setErrors({ general: data.error || "Error al subir el material" })
       }
     } catch (error) {
-      console.error("Error:", error)
-      alert("Error al subir el material")
+      setErrors({ general: "Error de conexión" })
     } finally {
-      setGuardando(false)
+      setLoading(false)
     }
   }
 
-  const handleInputChange = (field: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
-    if (errores[field]) {
-      setErrores((prev) => ({ ...prev, [field]: "" }))
-    }
-  }
-
-  const handleSeleccionarArchivo = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const archivo = event.target.files?.[0]
-    if (archivo) {
-      // Validar tipo de archivo
-      const tiposPermitidos = [
-        "application/pdf",
-        "application/msword",
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        "application/vnd.ms-powerpoint",
-        "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-      ]
-
-      if (!tiposPermitidos.includes(archivo.type)) {
-        alert("Tipo de archivo no permitido. Solo se permiten PDF, DOC, DOCX, PPT, PPTX")
-        return
-      }
-
-      // Validar tamaño (10MB = 10 * 1024 * 1024 bytes)
-      if (archivo.size > 10 * 1024 * 1024) {
-        alert("El archivo es demasiado grande. Máximo 10MB permitido.")
-        return
-      }
-
-      setArchivoSeleccionado(archivo)
-    }
-  }
-
-  const handleDragOver = (event: React.DragEvent) => {
-    event.preventDefault()
-  }
-
-  const handleDrop = (event: React.DragEvent) => {
-    event.preventDefault()
-    const archivo = event.dataTransfer.files[0]
-    if (archivo) {
-      // Simular evento de input para reutilizar la validación
-      const fakeEvent = {
-        target: { files: [archivo] },
-      } as React.ChangeEvent<HTMLInputElement>
-      handleSeleccionarArchivo(fakeEvent)
-    }
-  }
-
-  const handleClickSeleccionar = () => {
-    document.getElementById("archivo-input")?.click()
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return "0 Bytes"
+    const k = 1024
+    const sizes = ["Bytes", "KB", "MB", "GB"]
+    const i = Math.floor(Math.log(bytes) / Math.log(k))
+    return Number.parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i]
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-teal-100 dark:from-gray-900 dark:to-green-900/30" data-theme="dim">
-      <div className="container mx-auto p-6">
-        <div className="mb-6">
-          <div className="flex items-center gap-4 mb-4">
-            <Link href="/materiales">
-              <Button variant="outline" size="sm">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Volver a Materiales
-              </Button>
-            </Link>
-          </div>
+    <div className="min-h-screen bg-base-200">
+      {/* Navbar */}
+      <div className="navbar bg-base-100 shadow-lg">
+        <div className="flex-1">
+          <Link href="/materiales" className="btn btn-ghost">
+            <ArrowLeft className="w-4 h-4" />
+            Volver a Materiales
+          </Link>
+        </div>
+      </div>
 
-          <h1 className="text-3xl font-bold text-base-content mb-2">Subir Material Educativo</h1>
-          <p className="text-base-content/70">Agregar un nuevo recurso educativo al sistema</p>
+      <div className="container mx-auto px-4 py-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-base-content mb-2 flex items-center gap-2">
+            <BookOpen className="w-8 h-8" />
+            Subir Material Educativo
+          </h1>
+          <p className="text-base-content/70">Comparte recursos educativos con tus estudiantes</p>
         </div>
 
-        <Card className="bg-white dark:bg-gray-800 shadow-lg hover:shadow-xl transition-shadow max-w-2xl mx-auto">
-          <CardHeader>
-            <CardTitle>Información del Material</CardTitle>
-            <CardDescription>Complete todos los campos requeridos para subir el material educativo</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="titulo">Título del Material *</Label>
-                <Input
-                  id="titulo"
-                  value={formData.titulo}
-                  onChange={(e) => handleInputChange("titulo", e.target.value)}
-                  placeholder="Ej: Álgebra Básica - Capítulo 1"
-                  className={errores.titulo ? "border-red-500" : ""}
-                />
-                {errores.titulo && <p className="text-sm text-red-500">{errores.titulo}</p>}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="descripcion">Descripción *</Label>
-                <Textarea
-                  id="descripcion"
-                  value={formData.descripcion}
-                  onChange={(e) => handleInputChange("descripcion", e.target.value)}
-                  placeholder="Descripción detallada del contenido del material..."
-                  rows={4}
-                  className={errores.descripcion ? "border-red-500" : ""}
-                />
-                {errores.descripcion && <p className="text-sm text-red-500">{errores.descripcion}</p>}
-              </div>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Información del Material */}
+          <div className="card bg-base-100 shadow-lg">
+            <div className="card-body">
+              <h2 className="card-title text-xl mb-4">Información del Material</h2>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="tipo">Tipo de Material *</Label>
-                  <Select value={formData.tipo} onValueChange={(value) => handleInputChange("tipo", value)}>
-                    <SelectTrigger className={errores.tipo ? "border-red-500" : ""}>
-                      <SelectValue placeholder="Seleccione el tipo" />
-                    </SelectTrigger>
-                    <SelectContent className="dark:bg-gray-800">
-                      <SelectItem value="libro">Libro</SelectItem>
-                      <SelectItem value="documento">Documento</SelectItem>
-                      <SelectItem value="video">Video</SelectItem>
-                      <SelectItem value="presentacion">Presentación</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {errores.tipo && <p className="text-sm text-red-500">{errores.tipo}</p>}
+                <div className="form-control md:col-span-2">
+                  <label className="label">
+                    <span className="label-text">Título del material *</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="titulo"
+                    value={formData.titulo}
+                    onChange={handleChange}
+                    className={`input input-bordered ${errors.titulo ? "input-error" : ""}`}
+                    placeholder="Ej: Fundamentos de Álgebra - Unidad 1"
+                  />
+                  {errors.titulo && <span className="text-error text-sm">{errors.titulo}</span>}
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="materiaId">Materia *</Label>
-                  <Select value={formData.materiaId} onValueChange={(value) => handleInputChange("materiaId", value)}>
-                    <SelectTrigger className={errores.materiaId ? "border-red-500" : ""}>
-                      <SelectValue placeholder="Seleccione la materia" />
-                    </SelectTrigger>
-                    <SelectContent className="dark:bg-gray-800">
-                      {materias.map((materia) => (
-                        <SelectItem key={materia.id} value={materia.id}>
-                          {materia.nombre} - {materia.grado}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {errores.materiaId && <p className="text-sm text-red-500">{errores.materiaId}</p>}
+                <div className="form-control">
+                  <label className="label">
+                    <span className="label-text">Categoría *</span>
+                  </label>
+                  <select
+                    name="categoria"
+                    value={formData.categoria}
+                    onChange={handleChange}
+                    className={`select select-bordered ${errors.categoria ? "select-error" : ""}`}
+                  >
+                    <option value="">Seleccionar categoría</option>
+                    {categorias.map((categoria) => (
+                      <option key={categoria} value={categoria}>
+                        {categoria}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.categoria && <span className="text-error text-sm">{errors.categoria}</span>}
+                </div>
+
+                <div className="form-control">
+                  <label className="label">
+                    <span className="label-text">Grupo destinatario *</span>
+                  </label>
+                  <select
+                    name="grupoId"
+                    value={formData.grupoId}
+                    onChange={handleChange}
+                    className={`select select-bordered ${errors.grupoId ? "select-error" : ""}`}
+                  >
+                    <option value="">Seleccionar grupo</option>
+                    {grupos.map((grupo) => (
+                      <option key={grupo.id} value={grupo.id}>
+                        {grupo.nombre} - Grado {grupo.grado}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.grupoId && <span className="text-error text-sm">{errors.grupoId}</span>}
+                </div>
+
+                <div className="form-control md:col-span-2">
+                  <label className="label">
+                    <span className="label-text">Descripción *</span>
+                  </label>
+                  <textarea
+                    name="descripcion"
+                    value={formData.descripcion}
+                    onChange={handleChange}
+                    className={`textarea textarea-bordered h-32 ${errors.descripcion ? "textarea-error" : ""}`}
+                    placeholder="Describe el contenido del material, objetivos de aprendizaje, instrucciones de uso, etc."
+                  />
+                  {errors.descripcion && <span className="text-error text-sm">{errors.descripcion}</span>}
                 </div>
               </div>
+            </div>
+          </div>
 
-              {formData.tipo === "video" && (
-                <div className="space-y-2">
-                  <Label htmlFor="url">URL del Video *</Label>
-                  <Input
-                    id="url"
-                    type="url"
-                    value={formData.url}
-                    onChange={(e) => handleInputChange("url", e.target.value)}
-                    placeholder="https://ejemplo.com/video"
-                    className={errores.url ? "border-red-500" : ""}
-                  />
-                  {errores.url && <p className="text-sm text-red-500">{errores.url}</p>}
-                </div>
-              )}
+          {/* Subir Archivos */}
+          <div className="card bg-base-100 shadow-lg">
+            <div className="card-body">
+              <h2 className="card-title text-xl mb-4 flex items-center gap-2">
+                <Upload className="w-5 h-5" />
+                Archivos del Material
+              </h2>
 
-              {(formData.tipo === "documento" || formData.tipo === "libro" || formData.tipo === "presentacion") && (
-                <div className="space-y-2">
-                  <Label htmlFor="archivo">Archivo (Opcional)</Label>
-                  <div
-                    className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors"
-                    onDragOver={handleDragOver}
-                    onDrop={handleDrop}
-                  >
-                    <Upload className="h-8 w-8 mx-auto text-gray-400 mb-2" />
-                    {archivoSeleccionado ? (
-                      <div className="space-y-2">
-                        <p className="text-sm font-medium text-green-600">
-                          Archivo seleccionado: {archivoSeleccionado.name}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          Tamaño: {(archivoSeleccionado.size / 1024 / 1024).toFixed(2)} MB
-                        </p>
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text">Seleccionar archivos *</span>
+                  <span className="label-text-alt">PDF, DOCX, PPTX, JPG, PNG, MP4</span>
+                </label>
+                <input
+                  type="file"
+                  onChange={handleFileChange}
+                  className="file-input file-input-bordered w-full"
+                  multiple
+                  accept=".pdf,.docx,.pptx,.jpg,.jpeg,.png,.mp4"
+                />
+                {errors.archivos && <span className="text-error text-sm">{errors.archivos}</span>}
+              </div>
+
+              {/* Lista de archivos seleccionados */}
+              {archivos.length > 0 && (
+                <div className="mt-4">
+                  <h3 className="font-semibold mb-2">Archivos seleccionados:</h3>
+                  <div className="space-y-2">
+                    {archivos.map((archivo, index) => (
+                      <div key={index} className="flex items-center justify-between p-3 bg-base-200 rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <Upload className="w-4 h-4 text-primary" />
+                          <div>
+                            <p className="font-medium">{archivo.name}</p>
+                            <p className="text-sm text-base-content/60">{formatFileSize(archivo.size)}</p>
+                          </div>
+                        </div>
                         <button
                           type="button"
-                          onClick={() => setArchivoSeleccionado(null)}
-                          className="text-red-600 hover:underline text-sm"
+                          onClick={() => removeFile(index)}
+                          className="btn btn-ghost btn-sm text-error"
                         >
-                          Remover archivo
+                          <X className="w-4 h-4" />
                         </button>
                       </div>
-                    ) : (
-                      <>
-                        <p className="text-sm text-gray-600">
-                          Arrastra y suelta tu archivo aquí, o{" "}
-                          <button
-                            type="button"
-                            onClick={handleClickSeleccionar}
-                            className="text-blue-600 hover:underline"
-                          >
-                            selecciona un archivo
-                          </button>
-                        </p>
-                        <p className="text-xs text-gray-500 mt-1">PDF, DOC, DOCX, PPT, PPTX (máx. 10MB)</p>
-                      </>
-                    )}
+                    ))}
                   </div>
-                  <input
-                    id="archivo-input"
-                    type="file"
-                    accept=".pdf,.doc,.docx,.ppt,.pptx"
-                    onChange={handleSeleccionarArchivo}
-                    className="hidden"
-                  />
                 </div>
               )}
+            </div>
+          </div>
 
-              <div className="flex gap-4 pt-4">
-                <Link href="/materiales" className="flex-1">
-                  <Button type="button" variant="outline" className="w-full">
-                    Cancelar
-                  </Button>
-                </Link>
-                <Button type="submit" disabled={guardando} className="bg-blue-600 text-white hover:bg-blue-700 flex-1 text-balck dark:text-white">
-                  {guardando ? (
-                    "Subiendo..."
-                  ) : (
-                    <>
-                      <Save className="h-4 w-4 mr-2" />
-                      Subir Material
-                    </>
-                  )}
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
+          {/* Error general */}
+          {errors.general && (
+            <div className="alert alert-error">
+              <span>{errors.general}</span>
+            </div>
+          )}
+
+          {/* Botones */}
+          <div className="flex justify-end gap-4">
+            <Link href="/materiales" className="btn btn-outline">
+              Cancelar
+            </Link>
+            <button type="submit" className={`btn btn-primary ${loading ? "loading" : ""}`} disabled={loading}>
+              {loading ? (
+                "Subiendo..."
+              ) : (
+                <>
+                  <Save className="w-4 h-4" />
+                  Subir Material
+                </>
+              )}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   )

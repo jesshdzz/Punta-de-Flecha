@@ -2,224 +2,431 @@
 
 import type React from "react"
 
-import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ArrowLeft, Save } from "lucide-react"
-import { BaseDatos } from "@/lib/database"
-import { SistemaValidacion } from "@/lib/sistema-validacion"
-import type { Estudiante } from "@/types"
-import Link from "next/link"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
+import { ArrowLeft, Save, User, Users, FileText } from "lucide-react"
+
+interface Grupo {
+    id: number
+    nombre: string
+    grado: number
+}
 
 export default function NuevoEstudiantePage() {
-  const [formData, setFormData] = useState({
-    nombre: "",
-    apellidos: "",
-    fechaNacimiento: "",
-    grado: "",
-    grupo: "",
-    padreId: "padre1", // Por simplicidad, usamos un padre por defecto
-  })
-  const [errores, setErrores] = useState<Record<string, string>>({})
-  const [guardando, setGuardando] = useState(false)
-  const router = useRouter()
+    const [grupos, setGrupos] = useState<Grupo[]>([])
+    const [loading, setLoading] = useState(false)
+    const [formData, setFormData] = useState({
+        // Datos del estudiante
+        nombre: "",
+        correo: "",
+        telefono: "",
+        contrasena: "",
+        grupoId: "",
+        montoInscripcion: "",
+        // Datos del tutor
+        tutor: {
+            nombre: "",
+            correo: "",
+            telefono: "",
+            domicilio: "",
+        },
+        // Documentos (simulados)
+        documentos: [
+            { tipo: "Acta de nacimiento", entregado: false },
+            { tipo: "CURP", entregado: false },
+            { tipo: "Comprobante de domicilio", entregado: false },
+            { tipo: "Certificado de estudios", entregado: false },
+        ],
+    })
+    const [errors, setErrors] = useState<Record<string, string>>({})
+    const router = useRouter()
 
-  const validarFormulario = (): boolean => {
-    const nuevosErrores: Record<string, string> = {}
+    useEffect(() => {
+        fetchGrupos()
+    }, [])
 
-    if (!SistemaValidacion.validarNombre(formData.nombre)) {
-      nuevosErrores.nombre = "El nombre debe tener al menos 2 caracteres"
+    const fetchGrupos = async () => {
+        try {
+            const response = await fetch("/api/grupos")
+            const data = await response.json()
+            if (data.ok) {
+                setGrupos(data.grupos)
+            }
+        } catch (error) {
+            console.error("Error al obtener grupos:", error)
+        }
     }
 
-    if (!SistemaValidacion.validarNombre(formData.apellidos)) {
-      nuevosErrores.apellidos = "Los apellidos deben tener al menos 2 caracteres"
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+        const { name, value } = e.target
+
+        if (name.startsWith("tutor.")) {
+            const tutorField = name.split(".")[1]
+            setFormData((prev) => ({
+                ...prev,
+                tutor: {
+                    ...prev.tutor,
+                    [tutorField]: value,
+                },
+            }))
+        } else {
+            setFormData((prev) => ({
+                ...prev,
+                [name]: value,
+            }))
+        }
+
+        // Limpiar error del campo
+        if (errors[name]) {
+            setErrors((prev) => ({
+                ...prev,
+                [name]: "",
+            }))
+        }
     }
 
-    if (!formData.fechaNacimiento) {
-      nuevosErrores.fechaNacimiento = "La fecha de nacimiento es requerida"
-    } else {
-      const fecha = new Date(formData.fechaNacimiento)
-      if (!SistemaValidacion.validarFechaNacimiento(fecha)) {
-        nuevosErrores.fechaNacimiento = "La edad debe estar entre 5 y 18 años"
-      }
+    const handleDocumentoChange = (index: number, entregado: boolean) => {
+        setFormData((prev) => ({
+            ...prev,
+            documentos: prev.documentos.map((doc, i) => (i === index ? { ...doc, entregado } : doc)),
+        }))
     }
 
-    if (!SistemaValidacion.validarGrado(formData.grado)) {
-      nuevosErrores.grado = "Seleccione un grado válido"
+    const validateForm = () => {
+        const newErrors: Record<string, string> = {}
+
+        // Validaciones del estudiante
+        if (!formData.nombre.trim()) newErrors.nombre = "El nombre es requerido"
+        if (!formData.correo.trim()) newErrors.correo = "El correo es requerido"
+        if (!formData.telefono.trim()) newErrors.telefono = "El teléfono es requerido"
+        if (!formData.contrasena.trim()) newErrors.contrasena = "La contraseña es requerida"
+        if (!formData.grupoId) newErrors.grupoId = "Debe seleccionar un grupo"
+        if (!formData.montoInscripcion || Number.parseFloat(formData.montoInscripcion) <= 0) {
+            newErrors.montoInscripcion = "El monto de inscripción debe ser mayor a 0"
+        }
+
+        // Validaciones del tutor
+        if (!formData.tutor.nombre.trim()) newErrors["tutor.nombre"] = "El nombre del tutor es requerido"
+        if (!formData.tutor.correo.trim()) newErrors["tutor.correo"] = "El correo del tutor es requerido"
+        if (!formData.tutor.telefono.trim()) newErrors["tutor.telefono"] = "El teléfono del tutor es requerido"
+        if (!formData.tutor.domicilio.trim()) newErrors["tutor.domicilio"] = "El domicilio del tutor es requerido"
+
+        setErrors(newErrors)
+        return Object.keys(newErrors).length === 0
     }
 
-    if (!formData.grupo) {
-      nuevosErrores.grupo = "Seleccione un grupo"
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault()
+
+        if (!validateForm()) return
+
+        setLoading(true)
+
+        try {
+            // Simular documentos para la API
+            const documentosSimulados = formData.documentos
+                .filter((doc) => doc.entregado)
+                .map((doc) => ({
+                    id: Math.random(),
+                    nombre: doc.tipo,
+                    tipo: doc.tipo,
+                    fechaCreacion: new Date(),
+                    contenido: `Documento ${doc.tipo} simulado`,
+                }))
+
+            const payload = {
+                nombre: formData.nombre,
+                correo: formData.correo,
+                telefono: formData.telefono,
+                contrasena: formData.contrasena,
+                grupoId: Number.parseInt(formData.grupoId),
+                montoInscripcion: Number.parseFloat(formData.montoInscripcion),
+                documentos: documentosSimulados,
+                tutor: formData.tutor,
+            }
+
+            const response = await fetch("/api/estudiantes/alta", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(payload),
+            })
+
+            const data = await response.json()
+
+            if (data.ok) {
+                router.push("/estudiantes?success=created")
+            } else {
+                setErrors({ general: data.mensaje || "Error al registrar el estudiante" })
+            }
+        } catch (error) {
+            setErrors({ general: "Error de conexión" })
+        } finally {
+            setLoading(false)
+        }
     }
 
-    setErrores(nuevosErrores)
-    return Object.keys(nuevosErrores).length === 0
-  }
+    return (
+        <div className="min-h-screen bg-base-200">
+            {/* Navbar */}
+            <div className="shadow-lg navbar bg-base-100">
+                <div className="flex-1">
+                    <Link href="/estudiantes" className="btn btn-ghost">
+                        <ArrowLeft className="w-4 h-4" />
+                        Volver a Estudiantes
+                    </Link>
+                </div>
+            </div>
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+            <div className="container px-4 py-8 mx-auto">
+                <div className="mb-8">
+                    <h1 className="flex items-center gap-2 mb-2 text-3xl font-bold text-base-content">
+                        <User className="w-8 h-8" />
+                        Registrar Nuevo Estudiante
+                    </h1>
+                    <p className="text-base-content/70">Complete todos los campos para registrar un nuevo estudiante</p>
+                </div>
 
-    if (!validarFormulario()) {
-      return
-    }
+                <form onSubmit={handleSubmit} className="space-y-6">
+                    {/* Datos del Estudiante */}
+                    <div className="shadow-lg card bg-base-100">
+                        <div className="card-body">
+                            <h2 className="flex items-center gap-2 mb-4 text-xl card-title">
+                                <User className="w-5 h-5" />
+                                Datos del Estudiante
+                            </h2>
 
-    setGuardando(true)
+                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                <div className="form-control">
+                                    <label className="label">
+                                        <span className="label-text">Nombre completo *</span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        name="nombre"
+                                        value={formData.nombre}
+                                        onChange={handleChange}
+                                        className={`input input-bordered ${errors.nombre ? "input-error" : ""}`}
+                                        placeholder="Juan Pérez García"
+                                    />
+                                    {errors.nombre && <span className="text-sm text-error">{errors.nombre}</span>}
+                                </div>
 
-    try {
-      const db = BaseDatos.getInstance()
+                                <div className="form-control">
+                                    <label className="label">
+                                        <span className="label-text">Correo electrónico *</span>
+                                    </label>
+                                    <input
+                                        type="email"
+                                        name="correo"
+                                        value={formData.correo}
+                                        onChange={handleChange}
+                                        className={`input input-bordered ${errors.correo ? "input-error" : ""}`}
+                                        placeholder="juan@ejemplo.com"
+                                    />
+                                    {errors.correo && <span className="text-sm text-error">{errors.correo}</span>}
+                                </div>
 
-      const nuevoEstudiante: Estudiante = {
-        id: "est_" + Date.now().toString(),
-        nombre: formData.nombre,
-        apellidos: formData.apellidos,
-        fechaNacimiento: new Date(formData.fechaNacimiento),
-        grado: formData.grado,
-        grupo: formData.grupo,
-        padreId: formData.padreId,
-        activo: true,
-        fechaInscripcion: new Date(),
-      }
+                                <div className="form-control">
+                                    <label className="label">
+                                        <span className="label-text">Teléfono *</span>
+                                    </label>
+                                    <input
+                                        type="tel"
+                                        name="telefono"
+                                        value={formData.telefono}
+                                        onChange={handleChange}
+                                        className={`input input-bordered ${errors.telefono ? "input-error" : ""}`}
+                                        placeholder="1234567890"
+                                    />
+                                    {errors.telefono && <span className="text-sm text-error">{errors.telefono}</span>}
+                                </div>
 
-      if (db.crearEstudiante(nuevoEstudiante)) {
-        alert("Estudiante registrado exitosamente")
-        router.push("/estudiantes")
-      } else {
-        alert("Error al registrar el estudiante")
-      }
-    } catch (error) {
-      console.error("Error:", error)
-      alert("Error al registrar el estudiante")
-    } finally {
-      setGuardando(false)
-    }
-  }
+                                <div className="form-control">
+                                    <label className="label">
+                                        <span className="label-text">Contraseña *</span>
+                                    </label>
+                                    <input
+                                        type="password"
+                                        name="contrasena"
+                                        value={formData.contrasena}
+                                        onChange={handleChange}
+                                        className={`input input-bordered ${errors.contrasena ? "input-error" : ""}`}
+                                        placeholder="••••••••"
+                                    />
+                                    {errors.contrasena && <span className="text-sm text-error">{errors.contrasena}</span>}
+                                </div>
 
-  const handleInputChange = (field: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
-    if (errores[field]) {
-      setErrores((prev) => ({ ...prev, [field]: "" }))
-    }
-  }
+                                <div className="form-control">
+                                    <label className="label">
+                                        <span className="label-text">Grupo *</span>
+                                    </label>
+                                    <select
+                                        name="grupoId"
+                                        value={formData.grupoId}
+                                        onChange={handleChange}
+                                        className={`select select-bordered ${errors.grupoId ? "select-error" : ""}`}
+                                    >
+                                        <option value="">Seleccionar grupo</option>
+                                        {grupos.map((grupo) => (
+                                            <option key={grupo.id} value={grupo.id}>
+                                                {grupo.nombre} - Grado {grupo.grado}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    {errors.grupoId && <span className="text-sm text-error">{errors.grupoId}</span>}
+                                </div>
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 dark:from-gray-900 dark:to-purple-900/30">
-      <div className="container mx-auto p-6">
-        <div className="mb-6">
-          <div className="flex items-center gap-4 mb-4">
-            <Link href="/estudiantes">
-              <Button variant="outline" size="sm">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Volver a Estudiantes
-              </Button>
-            </Link>
-          </div>
+                                <div className="form-control">
+                                    <label className="label">
+                                        <span className="label-text">Monto de inscripción *</span>
+                                    </label>
+                                    <select
+                                        name="montoInscripcion"
+                                        value={formData.montoInscripcion}
+                                        onChange={handleChange}
+                                        className={`select select-bordered ${errors.montoInscripcion ? "select-error" : ""}`}
+                                    >
+                                        <option value="">Seleccionar monto de pago *</option>
+                                        <option value="1000">Inscripción Completa - $1,000</option>
+                                        <option value="1500">Inscripción parcial - $700</option>
+                                    </select>
+                                    {errors.montoInscripcion && <span className="text-sm text-error">{errors.montoInscripcion}</span>}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-base-content mb-2">Alta de Estudiante</h1>
-          <p className="text-gray-600 dark:text-base-content/70">Registrar un nuevo estudiante en el sistema</p>
+                    {/* Datos del Tutor */}
+                    <div className="shadow-lg card bg-base-100">
+                        <div className="card-body">
+                            <h2 className="flex items-center gap-2 mb-4 text-xl card-title">
+                                <Users className="w-5 h-5" />
+                                Datos del Tutor/Padre de Familia
+                            </h2>
+
+                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                <div className="form-control">
+                                    <label className="label">
+                                        <span className="label-text">Nombre completo *</span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        name="tutor.nombre"
+                                        value={formData.tutor.nombre}
+                                        onChange={handleChange}
+                                        className={`input input-bordered ${errors["tutor.nombre"] ? "input-error" : ""}`}
+                                        placeholder="María García López"
+                                    />
+                                    {errors["tutor.nombre"] && <span className="text-sm text-error">{errors["tutor.nombre"]}</span>}
+                                </div>
+
+                                <div className="form-control">
+                                    <p className="text-gray-500">ana.lopez@email.com</p>
+                                    <label className="label">
+                                        <span className="label-text">Correo electrónico *</span>
+                                    </label>
+                                    <input
+                                        type="email"
+                                        name="tutor.correo"
+                                        value={formData.tutor.correo}
+                                        onChange={handleChange}
+                                        className={`input input-bordered ${errors["tutor.correo"] ? "input-error" : ""}`}
+                                        placeholder="maria@ejemplo.com"
+                                    />
+
+                                    {errors["tutor.correo"] && <span className="text-sm text-error">{errors["tutor.correo"]}</span>}
+                                </div>
+
+                                <div className="form-control">
+                                    <label className="label">
+                                        <span className="label-text">Teléfono *</span>
+                                    </label>
+                                    <input
+                                        type="tel"
+                                        name="tutor.telefono"
+                                        value={formData.tutor.telefono}
+                                        onChange={handleChange}
+                                        className={`input input-bordered ${errors["tutor.telefono"] ? "input-error" : ""}`}
+                                        placeholder="0987654321"
+                                    />
+                                    {errors["tutor.telefono"] && <span className="text-sm text-error">{errors["tutor.telefono"]}</span>}
+                                </div>
+
+                                <div className="form-control md:col-span-2">
+                                    <label className="label">
+                                        <span className="label-text">Domicilio *</span>
+                                    </label>
+                                    <textarea
+                                        name="tutor.domicilio"
+                                        value={formData.tutor.domicilio}
+                                        onChange={handleChange}
+                                        className={`textarea textarea-bordered ${errors["tutor.domicilio"] ? "textarea-error" : ""}`}
+                                        placeholder="Calle, número, colonia, ciudad, código postal"
+                                        rows={3}
+                                    />
+                                    {errors["tutor.domicilio"] && <span className="text-sm text-error">{errors["tutor.domicilio"]}</span>}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Documentos */}
+                    <div className="shadow-lg card bg-base-100">
+                        <div className="card-body">
+                            <h2 className="flex items-center gap-2 mb-4 text-xl card-title">
+                                <FileText className="w-5 h-5" />
+                                Documentos Requeridos
+                            </h2>
+
+                            <div className="space-y-3">
+                                {formData.documentos.map((documento, index) => (
+                                    <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-base-200">
+                                        <span className="font-medium">{documento.tipo}</span>
+                                        <div className="form-control">
+                                            <label className="cursor-pointer label">
+                                                <span className="mr-2 label-text">Entregado</span>
+                                                <input
+                                                    type="checkbox"
+                                                    className="checkbox checkbox-primary"
+                                                    checked={documento.entregado}
+                                                    onChange={(e) => handleDocumentoChange(index, e.target.checked)}
+                                                />
+                                            </label>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Error general */}
+                    {errors.general && (
+                        <div className="alert alert-error">
+                            <span>{errors.general}</span>
+                        </div>
+                    )}
+
+                    {/* Botones */}
+                    <div className="flex justify-end gap-4">
+                        <Link href="/estudiantes" className="btn btn-outline">
+                            Cancelar
+                        </Link>
+                        <button type="submit" className={`btn btn-primary ${loading ? "loading" : ""}`} disabled={loading}>
+                            {loading ? (
+                                "Registrando..."
+                            ) : (
+                                <>
+                                    <Save className="w-4 h-4" />
+                                    Registrar Estudiante
+                                </>
+                            )}
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
-
-        <Card className="bg-white dark:bg-gray-800 shadow-lg hover:shadow-xl transition-shadow max-w-2xl mx-auto">
-          <CardHeader>
-            <CardTitle>Información del Estudiante</CardTitle>
-            <CardDescription>Complete todos los campos requeridos para registrar al estudiante</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="nombre">Nombre *</Label>
-                  <Input
-                    id="nombre"
-                    value={formData.nombre}
-                    onChange={(e) => handleInputChange("nombre", e.target.value)}
-                    placeholder="Ingrese el nombre"
-                    className={errores.nombre ? "border-red-500" : ""}
-                  />
-                  {errores.nombre && <p className="text-sm text-red-500">{errores.nombre}</p>}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="apellidos">Apellidos *</Label>
-                  <Input
-                    id="apellidos"
-                    value={formData.apellidos}
-                    onChange={(e) => handleInputChange("apellidos", e.target.value)}
-                    placeholder="Ingrese los apellidos"
-                    className={errores.apellidos ? "border-red-500" : ""}
-                  />
-                  {errores.apellidos && <p className="text-sm text-red-500">{errores.apellidos}</p>}
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="fechaNacimiento">Fecha de Nacimiento *</Label>
-                <Input
-                  id="fechaNacimiento"
-                  type="date"
-                  value={formData.fechaNacimiento}
-                  onChange={(e) => handleInputChange("fechaNacimiento", e.target.value)}
-                  className={errores.fechaNacimiento ? "border-red-500" : ""}
-                />
-                {errores.fechaNacimiento && <p className="text-sm text-red-500">{errores.fechaNacimiento}</p>}
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="grado">Grado *</Label>
-                  <Select value={formData.grado} onValueChange={(value) => handleInputChange("grado", value)}>
-                    <SelectTrigger className={errores.grado ? "border-red-500" : ""}>
-                      <SelectValue placeholder="Seleccione el grado" />
-                    </SelectTrigger>
-                    <SelectContent className="dark:bg-gray-800 bg-white">
-                      <SelectItem value="1°">1° Grado</SelectItem>
-                      <SelectItem value="2°">2° Grado</SelectItem>
-                      <SelectItem value="3°">3° Grado</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {errores.grado && <p className="text-sm text-red-500">{errores.grado}</p>}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="grupo">Grupo *</Label>
-                  <Select value={formData.grupo} onValueChange={(value) => handleInputChange("grupo", value)}>
-                    <SelectTrigger className={errores.grupo ? "border-red-500" : ""}>
-                      <SelectValue placeholder="Seleccione el grupo" />
-                    </SelectTrigger>
-                    <SelectContent className="dark:bg-gray-800 bg-white">
-                      <SelectItem value="A">Grupo A</SelectItem>
-                      <SelectItem value="B">Grupo B</SelectItem>
-                      <SelectItem value="C">Grupo C</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {errores.grupo && <p className="text-sm text-red-500">{errores.grupo}</p>}
-                </div>
-              </div>
-
-              <div className="flex gap-4 pt-4">
-                <Link href="/estudiantes" className="flex-1">
-                  <Button type="button" variant="outline" className="w-full">
-                    Cancelar
-                  </Button>
-                </Link>
-                <Button type="submit" disabled={guardando} className="flex-1 bg-blue-600 text-white hover:bg-blue-700 dark:text-white">
-                  {guardando ? (
-                    "Guardando..."
-                  ) : (
-                    <>
-                      <Save className="h-4 w-4 mr-2" />
-                      Registrar Estudiante
-                    </>
-                  )}
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
-  )
+    )
 }

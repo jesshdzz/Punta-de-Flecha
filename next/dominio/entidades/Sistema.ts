@@ -89,12 +89,12 @@ export class Sistema {
     }
 
     public async agregarMaterial(
-             datos: { titulo: string; descripcion: string; categoria: string },
-            archivos: File[],
-            idProfesor: number,
-              grupoId: number
-        
-        ): Promise<void> {
+        datos: { titulo: string; descripcion: string; categoria: string },
+        archivos: File[],
+        idProfesor: number,
+        grupoId: number
+
+    ): Promise<void> {
         try {
             if (!archivos || archivos.length === 0) throw new Error("Debe subir al menos un archivo.");
 
@@ -102,7 +102,7 @@ export class Sistema {
             this.validador.validarExtensionesArchivos(archivos);
             const datosGrupo = await this.bd.obtenerDatosGrupoPorId(grupoId);
             if (!datosGrupo) {
-            throw new Error("El grupo especificado no existe.");
+                throw new Error("El grupo especificado no existe.");
             }
             // Tomamos la extensión del primer archivo para el ejemplo
             const nombreArchivo = archivos[0].name;
@@ -111,15 +111,15 @@ export class Sistema {
 
             // Crear el material
             const material = new MaterialEducativo(
-                    null,
-                    datos.titulo,
-                    idProfesor,
-                    new Date(),
-                    datos.descripcion,
-                    datos.categoria,
-                    false,
-                    extension,
-                    grupoId
+                null,
+                datos.titulo,
+                idProfesor,
+                new Date(),
+                datos.descripcion,
+                datos.categoria,
+                false,
+                extension,
+                grupoId
             );
 
             // Aquí el MaterialEducativo se encarga de guardar todo
@@ -202,7 +202,7 @@ export class Sistema {
             throw new Error("Error al registrar asistencia. Intente mas tarde.");
         }
     }
-    
+
     public async actualizarDatosEstudiante(datos: {
         estudianteId: number;
         nombre?: string;
